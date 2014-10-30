@@ -17,8 +17,7 @@
     },
     "autoload": {
         "classmap": [
-            "database",
-            "tests/TestCase.php"
+            "tests"
         ],
         "psr-0": {
             "Tamayo\\Stretchy": "src/"

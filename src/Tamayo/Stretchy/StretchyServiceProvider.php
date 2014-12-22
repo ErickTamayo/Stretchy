@@ -11,6 +11,11 @@ class StretchyServiceProvider extends ServiceProvider {
 	 */
 	protected $defer = false;
 
+	public function boot()
+	{
+		$this->package('tamayo/stretchy');
+	}
+
 	/**
 	 * Register the service provider.
 	 *
@@ -18,7 +23,7 @@ class StretchyServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		//
+		$this->app->bind('index', 'Tamayo\Stretchy\Index\Builder');
 	}
 
 	/**

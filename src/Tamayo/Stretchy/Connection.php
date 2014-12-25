@@ -1,33 +1,60 @@
 <?php namespace Tamayo\Stretchy;
 
-use Config;
 use Elasticsearch\Client;
 
 class Connection
 {
 
-    /**
-     * ElasticSearch Client
-     * 
-     * @var \Elasticsearch\Client
-     */
-    protected $client;
+	/**
+	 * ElasticSearch Client.
+	 *
+	 * @var \Elasticsearch\Client
+	 */
+	protected $client;
 
-    /**
-     * Set up a new elastic client
-     */
-    public function __construct()
-    {
-        $this->client = new Client(['hosts' => (array) Config::get('stretchy::host')]);
-    }
+	/**
+	 * Available Authentication Options.
+	 *
+	 * @var array
+	 */
+	protected $authOptions = ['Basic', 'Digests', 'NTLM', 'Any'];
 
-    /**
-     * Get the index prefix from the configuration file
-     * 
-     * @return string
-     */
-    public function getIndexPrefix()
-    {
-        return Config::get('stretchy::prefix', '');
-    }
+	/**
+	 * Index Prefix.
+	 *
+	 * @var string
+	 */
+	protected $indexPrefix = '';
+
+	/**
+	 * Set up a new elastic client.
+	 *
+	 * @return void
+	 */
+	public function __construct($container, $hosts, $prefix, array $auth = null)
+	{
+		$this->client = new Client(['hosts' => (array) $hosts]);
+
+		$this->indexPrefix = $prefix;
+	}
+
+	/**
+	 * Get the index prefix.
+	 *
+	 * @return string
+	 */
+	public function getIndexPrefix()
+	{
+		return $this->indexPrefix;
+	}
+
+	/**
+	 * Create a new index in elasticsearch.
+	 *
+	 * @return string
+	 */
+	public function indexCreate($payload)
+	{
+		return $this->client->indices()->create($payload);
+	}
 }

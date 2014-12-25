@@ -4,77 +4,106 @@ use Tamayo\Stretchy\Connection;
 
 class Grammar
 {
-    /**
-     * Compile the create Index command
-     * 
-     * @return array
-     */
-    public function compileIndexCreate(Blueprint $blueprint, Connection $connection)
-    {
-        $compiled = array();
 
-        $compiled['index'] = $this->getIndexName($blueprint, $connection);
+	/**
+	 * The index prefix.
+	 *
+	 * @var string
+	 */
+	protected $indexPrefix;
 
-        $compiled['body']  = $this->compileSettings($blueprint);
+	/**
+	 * Compile the create Index command.
+	 *
+	 * @return array
+	 */
+	public function compileIndexCreate(Blueprint $blueprint, Connection $connection)
+	{
+		$compiled = array();
 
-        return $compiled;
-    }
+		$compiled['index'] = $this->getIndexName($blueprint);
+
+		$compiled['body']  = $this->compileSettings($blueprint);
+
+		return $compiled;
+	}
 
 
-    /**
-     * Get the index name
-     * 
-     * @param  Blueprint  $blueprint
-     * @param  Connection $connection
-     * @return string
-     */
-    public function getIndexName(Blueprint $blueprint, Connection $connection)
-    {
-        return $connection->getIndexPrefix().$blueprint->getIndex();
-    }
+	/**
+	 * Get the index name.
+	 *
+	 * @param  Blueprint  $blueprint
+	 * @param  Connection $connection
+	 * @return string
+	 */
+	public function getIndexName(Blueprint $blueprint)
+	{
+		return $this->getIndexPrefix().$blueprint->getIndex();
+	}
 
-    /**
-     * Compile the settings for the index
-     * 
-     * @param  Blueprint $blueprint
-     * @return array
-     */
-    public function compileSettings(Blueprint $blueprint)
-    {
-        $compiled = array();
+	/**
+	 * Set the index prefix.
+	 *
+	 * @param sting $prefix
+	 */
+	public function setIndexPrefix($prefix)
+	{
+		$this->indexPrefix = $prefix;
+	}
 
-        $compiled['settings'] = array_merge($this->compileShards($blueprint), $this->compileReplicas($blueprint));
+	/**
+	 * Get the index prefix.
+	 *
+	 * @return string
+	 */
+	public function getIndexPrefix()
+	{
+		return $this->indexPrefix;
+	}
 
-        return $compiled;
-    }
+	/**
+	 * Compile the settings for the index.
+	 *
+	 * @param  Blueprint $blueprint
+	 * @return array
+	 */
+	public function compileSettings(Blueprint $blueprint)
+	{
+		$compiled = array();
 
-    /**
-     * Compile the shard counts
-     * @param  Blueprint $blueprint
-     * @return array
-     */
-    public function compileShards(Blueprint $blueprint)
-    {
-        $compiled = array();
+		$compiled['settings'] = array_merge($this->compileShards($blueprint), $this->compileReplicas($blueprint));
 
-        $compiled['number_of_shards'] = $blueprint->getShards();
+		return $compiled;
+	}
 
-        return $compiled;
-    }
+	/**
+	 * Compile the shard count.
+	 *
+	 * @param  Blueprint $blueprint
+	 * @return array
+	 */
+	public function compileShards(Blueprint $blueprint)
+	{
+		$compiled = array();
 
-    /**
-     * Compile the replica count
-     * 
-     * @param  Blueprint $blueprint
-     * @return array
-     */
-    public function compileReplicas(Blueprint $blueprint)
-    {
-        $compiled = array();
+		$compiled['number_of_shards'] = $blueprint->getShards();
 
-        $compiled['number_of_replicas'] = $blueprint->getReplicas();
+		return $compiled;
+	}
 
-        return $compiled;
-    }
+	/**
+	 * Compile the replica count.
+	 *
+	 * @param  Blueprint $blueprint
+	 * @return array
+	 */
+	public function compileReplicas(Blueprint $blueprint)
+	{
+		$compiled = array();
+
+		$compiled['number_of_replicas'] = $blueprint->getReplicas();
+
+		return $compiled;
+	}
 
 }

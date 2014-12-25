@@ -2,9 +2,6 @@
 
 use Illuminate\Support\Facades\Facade;
 
-/**
-* Index Facade
-*/
 class Index extends Facade
 {
     /**
@@ -12,5 +9,5 @@ class Index extends Facade
      *
      * @return string
      */
-    protected static function getFacadeAccessor() { return 'index'; }
+    protected static function getFacadeAccessor() { return 'stretchy.index'; }
 }

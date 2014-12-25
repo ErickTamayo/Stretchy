@@ -1,5 +1,6 @@
 <?php namespace Tamayo\Stretchy;
 
+use Tamayo\Stretchy\Connection;
 use Illuminate\Support\ServiceProvider;
 
 class StretchyServiceProvider extends ServiceProvider {
@@ -23,7 +24,16 @@ class StretchyServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		$this->app->bind('index', 'Tamayo\Stretchy\Index\Builder');
+		$this->app->bind('stretchy.index', 'Tamayo\Stretchy\Index\Builder');
+
+		$this->app->bindShared('Tamayo\Stretchy\Connection', function($app)
+			{
+				return new Connection(
+					$app['config']->get('stretchy::hosts'),
+					$app['config']->get('stretchy::prefix'),
+					$app['config']->get('stretchy::auth')
+				);
+			});
 	}
 
 	/**

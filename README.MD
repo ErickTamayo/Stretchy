@@ -2,7 +2,7 @@ Stretchy
 =========
 [![Build Status](https://travis-ci.org/ErickTamayo/Stretchy.svg?branch=master)](https://travis-ci.org/ErickTamayo/Stretchy)
 
-Stretchy in an [ElasticSearch] integration for Laravel 5.0.
+Stretchy in an [ElasticSearch] integration for Laravel.
 
 Description on going.
 
@@ -10,7 +10,8 @@ Description on going.
 0.0.1
 
 ### Roadmap
-- **Index API**
+- **Documentation**
+- **Index API I(Basic)**
 - **Elastic Query Builder (Search API)**
 - **Leverage Models**
 	- Model traits
@@ -19,7 +20,7 @@ Description on going.
 	- Migrations with PutMaping
 - **Advanced models and relations**
 	- Search and rebuild model from results and it's relationships
-- **Documentation**
+- **Index API II (Advanced)**
 
 ### License
 MIT

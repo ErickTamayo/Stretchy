@@ -7,22 +7,21 @@ return [
     | ElasticSeach configuration
     |--------------------------------------------------------------------------
     |
-    | Here you can configure the settings for the elastic search server
+    | Here you can configure the settings for the elastic search server.
     |
     */
 
-    'host'   => 'http://localhost',
+    'hosts'  => 'http://localhost',
     'port'   => '9200',
-    'prefix' => '',
-    'auth'   => false,
+    'prefix' => 'test',
 
     /*
     |--------------------------------------------------------------------------
     | HTTP basic authentication parameters
     |--------------------------------------------------------------------------
     |
-    | HTTP authentication
-    | 
+    | HTTP authentication. Leave it blank if no auth is required.
+    |
     | Options: [Basic, Digests, NTLM, Any]
     |
     */

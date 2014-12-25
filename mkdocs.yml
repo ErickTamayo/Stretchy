@@ -1,0 +1,7 @@
+site_name: Stretchy
+theme: readthedocs
+use_directory_urls: false
+pages:
+- ['index.md', 'Home']
+- ['getting_started.md', 'Getting Started']
+- ['reference/index_operations.md', 'Reference', 'Index Operations']

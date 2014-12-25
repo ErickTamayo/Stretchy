@@ -1,4 +1,4 @@
 #Reference
 
-<!-- * [Index Operations](reference/index_operations.md) -->
+* [Index Operations](index_operations.md)
 

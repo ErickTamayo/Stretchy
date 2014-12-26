@@ -31,7 +31,7 @@ class Connection
 	 *
 	 * @return void
 	 */
-	public function __construct($container, $hosts, $prefix, array $auth = null)
+	public function __construct($hosts, $prefix, array $auth = null)
 	{
 		$this->client = new Client(['hosts' => (array) $hosts]);
 
@@ -51,10 +51,33 @@ class Connection
 	/**
 	 * Create a new index in elasticsearch.
 	 *
-	 * @return string
+	 * @param  array
+	 * @return array
 	 */
 	public function indexCreate($payload)
 	{
 		return $this->client->indices()->create($payload);
+	}
+
+	/**
+	 * Delete an index in elastic search.
+	 *
+	 * @param  string $index
+	 * @return array
+	 */
+	public function indexDelete($index)
+	{
+		return $this->client->indices()->delete($index);
+	}
+
+	/**
+	 * Get the settings for one or multiple indices.
+	 *
+	 * @param  array $payload
+	 * @return array
+	 */
+	public function indexGetSettings($payload)
+	{
+		return $this->client->indices()->getSettings($payload);
 	}
 }

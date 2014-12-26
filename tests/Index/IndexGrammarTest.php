@@ -39,6 +39,15 @@ class IndexGrammarTest extends PHPUnit_Framework_TestCase
 
     }
 
+    public function testCompileGetSettings()
+    {
+    	$grammar = $this->getGrammar();
+
+    	$compiled = $grammar->compileGetSettings(['tamayo', 'stretchy']);
+
+    	$this->assertEquals($compiled, ['index' => ['tamayo', 'stretchy']]);
+    }
+
     public function getGrammar()
     {
         return new Grammar;

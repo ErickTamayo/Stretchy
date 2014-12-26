@@ -3,6 +3,7 @@
 use Closure;
 use Tamayo\Stretchy\Connection;
 use Tamayo\Stretchy\Index\Grammar;
+use Tamayo\Stretchy\Index\Processor;
 
 class Builder
 {
@@ -22,15 +23,23 @@ class Builder
 	protected $grammar;
 
 	/**
+	 * Index Processor.
+	 *
+	 * @var \Tamayo\Stretchy\Index\Processor
+	 */
+	protected $processor;
+
+	/**
 	 * Index Builder.
 	 *
 	 * @param \Tamayo\Stretchy\Connection $connection
 	 * @param Grammar                     $grammar
 	 */
-	public function __construct(Connection $connection, Grammar $grammar)
+	public function __construct(Connection $connection, Grammar $grammar, Processor $processor)
 	{
 		$this->connection = $connection;
-		$this->grammar = $grammar;
+		$this->grammar    = $grammar;
+		$this->processor  = $processor;
 
 		$this->grammar->setIndexPrefix($connection->getIndexPrefix());
 	}
@@ -61,30 +70,36 @@ class Builder
 	 */
 	public function delete($index)
 	{
+		$blueprint = $this->createBlueprint($index);
 
+		$blueprint->delete();
+
+		$this->build($blueprint);
 	}
 
 	/**
-	 * Create an alias on Elastic.
+	 * Get Settings of indices.
 	 *
-	 * @param  string $index
-	 * @param  string $alias
-	 * @return \Tamayo\Stretchy\Index\Blueprint
+	 * @param  string|array $index
+	 * @return mixed
 	 */
-	public function alias($index, $alias)
+	public function getSettings($index)
 	{
 
-	}
+		$prefix = $this->connection->getIndexPrefix();
 
-	/**
-	 * Delete an alias on Elastic.
-	 *
-	 * @param  string $alias
-	 * @return \Tamayo\Stretchy\Index\Blueprint
-	 */
-	public function deleteAlias($alias)
-	{
+		if (is_array($index)) {
+			foreach ($index as $key => $value) {
+				$index[$key] = $prefix.$value;
+			}
+		}
+		else {
+			$index = $prefix.$index;
+		}
 
+		$compiled = $this->grammar->compileGetSettings($index);
+
+		return $this->processor->processGetSettings($this, $this->connection->indexGetSettings($compiled));
 	}
 
 	/**

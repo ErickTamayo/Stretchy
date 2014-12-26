@@ -23,4 +23,18 @@ class IndexBlueprintTest extends PHPUnit_Framework_TestCase
 
         $blueprint->build($connection, $grammar);
     }
+
+    public function testBuildDeleteIndex()
+    {
+        $blueprint = new Blueprint('index');
+        $blueprint->delete();
+
+        $connection = Mockery::mock('Tamayo\Stretchy\Connection');
+        $connection->shouldReceive('indexDelete')->once();
+
+        $grammar = Mockery::mock('Tamayo\Stretchy\Index\Grammar');
+        $grammar->shouldReceive('compileIndexDelete')->once();
+
+        $blueprint->build($connection, $grammar);
+    }
 }

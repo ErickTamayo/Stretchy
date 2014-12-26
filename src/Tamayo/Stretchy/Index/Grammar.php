@@ -17,7 +17,7 @@ class Grammar
 	 *
 	 * @return array
 	 */
-	public function compileIndexCreate(Blueprint $blueprint, Connection $connection)
+	public function compileIndexCreate(Blueprint $blueprint)
 	{
 		$compiled = array();
 
@@ -28,6 +28,36 @@ class Grammar
 		return $compiled;
 	}
 
+	/**
+	 * Compile the delete Index command.
+	 *
+	 * @param  Blueprint  $blueprint
+	 * @param  Connection $connection
+	 * @return array
+	 */
+	public function compileIndexDelete(Blueprint $blueprint)
+	{
+		$compiled = array();
+
+		$compiled['index'] = $this->getIndexName($blueprint);
+
+		return $compiled;
+	}
+
+	/**
+	 * Compile Get Settings.
+	 *
+	 * @param  string|array $indices
+	 * @return array
+	 */
+	public function compileGetSettings($indices)
+	{
+		$compiled = array();
+
+		$compiled['index'] = (array) $indices;
+
+		return $compiled;
+	}
 
 	/**
 	 * Get the index name.

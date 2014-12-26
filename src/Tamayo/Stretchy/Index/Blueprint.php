@@ -73,6 +73,16 @@ class Blueprint
 	}
 
 	/**
+	 * Indicates that the index needs to be deleted.
+	 *
+	 * @return void
+	 */
+	public function delete()
+	{
+		$this->command = 'indexDelete';
+	}
+
+	/**
 	 * Specify number of index shards.
 	 *
 	 * @param  integer $quantity

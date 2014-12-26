@@ -55,6 +55,6 @@ class IndexGrammarTest extends PHPUnit_Framework_TestCase
 
     public function getConnection()
     {
-        return Mockery::mock(Connection::class);
+        return Mockery::mock('Tamayo\Stretchy\Connection');
     }
 }

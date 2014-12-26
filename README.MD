@@ -9,6 +9,10 @@ Description on going.
 ### Version
 0.0.1
 
+### Documentation
+
+The current documentation is at [stretchy.readthedocs.org](http://stretchy.readthedocs.org/).
+
 ### Roadmap
 - **Documentation**
 - **Index API I(Basic)**

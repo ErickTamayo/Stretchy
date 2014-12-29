@@ -80,4 +80,26 @@ class Connection
 	{
 		return $this->client->indices()->getSettings($payload);
 	}
+
+	/**
+	 * Perform an insertion into the engine.
+	 *
+	 * @param  array $payload
+	 * @return array
+	 */
+	public function insert($payload)
+	{
+		return $this->client->index($payload);
+	}
+
+	/**
+	 * Perform a search in the engine.
+	 *
+	 * @param  array $payload
+	 * @return array
+	 */
+	public function search($payload)
+	{
+		return $this->client->search($payload);
+	}
 }

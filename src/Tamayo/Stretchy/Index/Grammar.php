@@ -1,16 +1,10 @@
 <?php namespace Tamayo\Stretchy\Index;
 
-use Tamayo\Stretchy\Connection;
+use Tamayo\Stretchy\Index\Builder;
+use Tamayo\Stretchy\Index\Blueprint;
+use Tamayo\Stretchy\Grammar as BaseGrammar;
 
-class Grammar
-{
-
-	/**
-	 * The index prefix.
-	 *
-	 * @var string
-	 */
-	protected $indexPrefix;
+class Grammar extends BaseGrammar {
 
 	/**
 	 * Compile the create Index command.
@@ -19,11 +13,10 @@ class Grammar
 	 */
 	public function compileIndexCreate(Blueprint $blueprint)
 	{
-		$compiled = array();
-
-		$compiled['index'] = $this->getIndexName($blueprint);
-
-		$compiled['body']  = $this->compileSettings($blueprint);
+		$compiled = array_merge(
+				$this->compile('index', $this->getIndexName($blueprint)),
+				$this->compile('body', $this->compileSettings($blueprint))
+			);
 
 		return $compiled;
 	}
@@ -32,14 +25,25 @@ class Grammar
 	 * Compile the delete Index command.
 	 *
 	 * @param  Blueprint  $blueprint
-	 * @param  Connection $connection
 	 * @return array
 	 */
 	public function compileIndexDelete(Blueprint $blueprint)
 	{
-		$compiled = array();
+		return $this->compile('index', $this->getIndexName($blueprint));
+	}
 
-		$compiled['index'] = $this->getIndexName($blueprint);
+	/**
+	 * Compile an insert command.
+	 *
+	 * @param  Builder $builder
+	 * @param  array   $payload
+	 * @return array
+	 */
+	public function compileInsert(Builder $builder, array $payload)
+	{
+		$compiled = $this->compile('body', $payload);
+
+		$compiled = array_merge($this->compileHeader($builder), $compiled);
 
 		return $compiled;
 	}
@@ -52,43 +56,18 @@ class Grammar
 	 */
 	public function compileGetSettings($indices)
 	{
-		$compiled = array();
-
-		$compiled['index'] = (array) $indices;
-
-		return $compiled;
+		return $this->compile('index', (array) $indices);
 	}
 
 	/**
 	 * Get the index name.
 	 *
 	 * @param  Blueprint  $blueprint
-	 * @param  Connection $connection
 	 * @return string
 	 */
 	public function getIndexName(Blueprint $blueprint)
 	{
 		return $this->getIndexPrefix().$blueprint->getIndex();
-	}
-
-	/**
-	 * Set the index prefix.
-	 *
-	 * @param sting $prefix
-	 */
-	public function setIndexPrefix($prefix)
-	{
-		$this->indexPrefix = $prefix;
-	}
-
-	/**
-	 * Get the index prefix.
-	 *
-	 * @return string
-	 */
-	public function getIndexPrefix()
-	{
-		return $this->indexPrefix;
 	}
 
 	/**
@@ -99,11 +78,7 @@ class Grammar
 	 */
 	public function compileSettings(Blueprint $blueprint)
 	{
-		$compiled = array();
-
-		$compiled['settings'] = array_merge($this->compileShards($blueprint), $this->compileReplicas($blueprint));
-
-		return $compiled;
+		return $this->compile('settings', array_merge($this->compileShards($blueprint), $this->compileReplicas($blueprint)));
 	}
 
 	/**
@@ -114,11 +89,7 @@ class Grammar
 	 */
 	public function compileShards(Blueprint $blueprint)
 	{
-		$compiled = array();
-
-		$compiled['number_of_shards'] = $blueprint->getShards();
-
-		return $compiled;
+		return $this->compile('number_of_shards', $blueprint->getShards());
 	}
 
 	/**
@@ -129,11 +100,7 @@ class Grammar
 	 */
 	public function compileReplicas(Blueprint $blueprint)
 	{
-		$compiled = array();
-
-		$compiled['number_of_replicas'] = $blueprint->getReplicas();
-
-		return $compiled;
+		return $this->compile('number_of_replicas', $blueprint->getReplicas());
 	}
 
 }

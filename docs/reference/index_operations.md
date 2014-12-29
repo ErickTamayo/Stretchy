@@ -1,6 +1,6 @@
 #Introduction
 
-Here you will find the index API for manage an index in elastic search.
+Here you will find the index API for manage an index in elasticsearch.
 
 Index operations includes so far:
 
@@ -13,12 +13,16 @@ Index operations includes so far:
 # Create an index
 
 To create a basic index just do the following:
+```php
+Index::create('foo');
+```
 
+If you want to specify shards and replicas:
 ```php
 Index::create('foo', function($index)
 	{
-		$index->shards(3);
-		$index->replicas(2);
+		$index->shards(5);
+		$index->replicas(1);
 	});
 ```
 

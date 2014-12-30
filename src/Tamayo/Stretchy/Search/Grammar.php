@@ -86,7 +86,7 @@ class Grammar extends BaseGrammar {
 	 */
 	protected function compileClause(Clause $clause)
 	{
-		$compiled = $clause->getConstraints();
+		$compiled = $clause->getAffectedConstraints();
 
 		if (empty($compiled)) {
 			return null;

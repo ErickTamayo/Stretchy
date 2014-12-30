@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Str;
 
-abstract class Clause
+class Clause
 {
 
 	/**
@@ -40,8 +40,23 @@ abstract class Clause
 		return $this;
 	}
 
-	public function getConstraints()
+	/**
+	 * Get the applied constraints in the clause.
+	 *
+	 * @return array
+	 */
+	public function getAffectedConstraints()
 	{
 		return $this->container;
+	}
+
+	/**
+	 * Set constraints for te clause.
+	 *
+	 * @param array $constraints
+	 */
+	public function setConstraints($constraints)
+	{
+		$this->constraints = $constraints;
 	}
 }

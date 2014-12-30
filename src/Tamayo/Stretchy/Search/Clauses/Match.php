@@ -9,5 +9,5 @@ class Match extends Clause
 	 *
 	 * @var array
 	 */
-	protected $constraints = ['query', 'operator', 'zero_terms_query', 'cutoff_frequency'];
+	protected $constraints = ['query', 'operator', 'zero_terms_query', 'cutoff_frequency', 'type', 'lenient', 'analizer'];
 }

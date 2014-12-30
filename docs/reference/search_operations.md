@@ -10,7 +10,7 @@ For **match** reference in elasticsearch [click here](http://www.elasticsearch.o
 Stretchy::search('foo')->match('bar', 'Stretchy')->get();
 ```
 
-To speficy more parameters
+To provide additional parameters:
 
 ```php
 Stretchy::search('foo')->match('bar', 'Stretchy', function($match)
@@ -21,22 +21,13 @@ Stretchy::search('foo')->match('bar', 'Stretchy', function($match)
 		});
 ```
 
-or
-
-```php
-Stretchy::search('foo')->match('bar', function($match)
-		{
-			$match->query('Stretchy'); //The query must be present when specifying more parameters
-			$match->operator('and');
-			$match->zeroTermsQuery('all');
-			$match->cutoffFrequency(0.001);
-		});
-```
-
-##phrase
-
-the match phrase is the same as match:
+###phrase
 
 ```php
 Stretchy::search('foo')->matchPhrase('bar', 'Stretchy')->get();
+```
+###match_phrase_prefix
+
+```php
+Stretchy::search('foo')->matchPhrasePrefix('bar', 'Stretchy')->get();
 ```

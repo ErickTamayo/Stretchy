@@ -87,29 +87,52 @@ class Builder extends BaseBuilder {
 	/**
 	 * Elastic Match Query.
 	 *
-	 * @param  string $field
-	 * @param  mixed $value
+	 * @param  string  $field
+	 * @param  mixed   $value
+	 * @param  Closure $parameters
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function match($field, $matching, Closure $parameters = null)
+	public function match($field, $matching, Closure $parameters = null, $type = 'boolean')
 	{
 		$match = new Match;
 
 		// We check if the developer is providing aditional parameters
-		if ($matching instanceof Closure) {
-			$matching($match);
-		}
-		elseif (isset($parameters)) {
+		if(isset($parameters)) {
 			$parameters($match);
-			$match->query($matching);
 		}
-		else{
-			$match->query($matching);
-		}
+
+		$match->query($matching);
+		$match->type($type);
 
 		$this->setStatement('match', $field, $match);
 
 		return $this;
+	}
+
+	/**
+	 * Elastic match phrase query.
+	 *
+	 * @param  string  		$field
+	 * @param  mixed   		$value
+	 * @param  Closure|null $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function matchPhrase($field, $matching, Closure $parameters = null)
+	{
+		return $this->match($field, $matching, $parameters, 'phrase');
+	}
+
+	/**
+	 * Elastic match phrase prefix query.
+	 *
+	 * @param  string       $fiel
+	 * @param  mixed       	$matching
+	 * @param  Closure|null $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function matchPhrasePrefix($field, $matching, Closure $parameters = null)
+	{
+		return $this->match($field, $matching, $parameters, 'phrase_prefix');
 	}
 
 	/**

@@ -8,25 +8,43 @@ use Tamayo\Stretchy\Search\Processor;
 class SearchGrammarTest extends PHPUnit_Framework_TestCase
 {
 
-	public function testMatch()
+	public function testSingleMatch()
 	{
 		$builder = $this->getBuilder();
 
-		$builder->match('foo', function($match)
+		$builder->match('foo', 'bar', function($match)
 		{
-			$match->query('bar');
 			$match->operator('and');
 			$match->zeroTermsQuery('all');
 			$match->cutoffFrequency(0.001);
-
+			$match->lenient(true);
 		});
 
 		$json = $builder->toJson();
 
-		dd($json);
+		$this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"operator":"and","zero_terms_query":"all","cutoff_frequency":0.001,"lenient":true,"query":"bar","type":"boolean"}}}}}', $json);
+	}
 
-		$this->assertEquals('', $json);
+	public function testSingleMatchPhrase()
+	{
+		$builder = $this->getBuilder();
 
+		$builder->matchPhrase('foo', 'bar');
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"query":"bar","type":"phrase"}}}}}', $json);
+	}
+
+	public function testSingleMatchPhrasePrefix()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->matchPhrasePrefix('foo', 'bar');
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"query":"bar","type":"phrase_prefix"}}}}}', $json);
 	}
 
 	public function getGrammar()

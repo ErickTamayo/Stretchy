@@ -5,3 +5,4 @@ pages:
 - ['index.md', 'Home']
 - ['getting_started.md', 'Getting Started']
 - ['reference/index_operations.md', 'Reference', 'Index Operations']
+- ['reference/search_operations.md', 'Reference', 'Search Operations']

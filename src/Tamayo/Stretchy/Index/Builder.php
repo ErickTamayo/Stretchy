@@ -4,23 +4,11 @@ use Closure;
 use Tamayo\Stretchy\Connection;
 use Tamayo\Stretchy\Index\Grammar;
 use Tamayo\Stretchy\Index\Processor;
+use Tamayo\Stretchy\Builder as BaseBuilder;
+use Tamayo\Stretchy\Exceptions\TypeMustBeDefinedException;
+use Tamayo\Stretchy\Exceptions\IndexMustBeDefinedException;
 
-class Builder
-{
-
-	/**
-	 * Elastic Connection.
-	 *
-	 * @var \Tamayo\Stretchy\Connection
-	 */
-	protected $connection;
-
-	/**
-	 * Index Grammar.
-	 *
-	 * @var \Tamayo\Stretchy\Index\Grammar
-	 */
-	protected $grammar;
+class Builder extends BaseBuilder {
 
 	/**
 	 * Index Processor.
@@ -37,11 +25,9 @@ class Builder
 	 */
 	public function __construct(Connection $connection, Grammar $grammar, Processor $processor)
 	{
-		$this->connection = $connection;
-		$this->grammar    = $grammar;
-		$this->processor  = $processor;
+		parent::__construct($connection, $grammar);
 
-		$this->grammar->setIndexPrefix($connection->getIndexPrefix());
+		$this->processor = $processor;
 	}
 
 	/**
@@ -78,13 +64,38 @@ class Builder
 	}
 
 	/**
+	 * Insert a document in the engine.
+	 *
+	 * @param  array  $payload
+	 * @return mixed
+	 */
+	public function insert(array $payload)
+	{
+		if(! $this->indexIsDefined()) {
+			throw new IndexMustBeDefinedException("To perform an insert, you must define an index", 1);
+		}
+
+		if(! $this->typeIsDefined()) {
+			throw new TypeMustBeDefinedException("To perform an insert, you must define a type", 1);
+		}
+
+		$compiled = $this->grammar->compileInsert($this, $payload);
+
+		return $this->processor->processInsert($this, $this->connection->insert($compiled));
+	}
+
+	/**
 	 * Get Settings of indices.
 	 *
 	 * @param  string|array $index
 	 * @return mixed
 	 */
-	public function getSettings($index)
+	public function getSettings($index = null)
 	{
+
+		if ($index == null) {
+			$index = $this->index;
+		}
 
 		$prefix = $this->connection->getIndexPrefix();
 

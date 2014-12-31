@@ -4,6 +4,8 @@ Stretchy
 
 Stretchy in an [ElasticSearch] integration for Laravel.
 
+Heavily Inspired by Query Builder and Schema of laravel.
+
 Description on going.
 
 ### Version

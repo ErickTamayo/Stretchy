@@ -5,8 +5,8 @@ use Illuminate\Support\Fluent;
 use Tamayo\Stretchy\Connection;
 use Tamayo\Stretchy\Index\Grammar;
 
-class Blueprint
-{
+class Blueprint {
+
 	/**
 	 * Elastic Index Name.
 	 *

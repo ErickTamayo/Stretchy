@@ -1,11 +1,12 @@
 <?php namespace Tamayo\Stretchy\Search;
 
 use Closure;
+use Illuminate\Support\Str;
 use Tamayo\Stretchy\Connection;
-use Illuminate\Support\Pluralizer;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Processor;
-use Tamayo\Stretchy\Search\Clauses\Match;
+use Tamayo\Stretchy\Search\Clauses\Bool;
+use Tamayo\Stretchy\Search\Clauses\Clause;
 use Tamayo\Stretchy\Builder as BaseBuilder;
 
 class Builder extends BaseBuilder {
@@ -36,10 +37,24 @@ class Builder extends BaseBuilder {
 	 *
 	 * @var array
 	 */
-	public $matches;
+	public $match = [];
 
 	/**
-	 * Search Builder.
+	 * The multi match constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $multiMatch = [];
+
+	/**
+	 * The boolean constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $bool = [];
+
+	/**
+	 * Create a new search builder.
 	 *
 	 * @param \Tamayo\Stretchy\Connection $connection
 	 * @param Grammar                     $grammar
@@ -89,16 +104,17 @@ class Builder extends BaseBuilder {
 	 *
 	 * @param  string  $field
 	 * @param  mixed   $value
-	 * @param  Closure $parameters
+	 * @param  Closure $callback
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function match($field, $matching, Closure $parameters = null, $type = 'boolean')
+	public function match($field, $matching, Closure $callback = null, $type = 'boolean')
 	{
-		$match = new Match;
+		$match = new Clause;
+		$match->setConstraints(['query', 'operator', 'zero_terms_query', 'cutoff_frequency', 'type', 'lenient', 'analizer']);
 
 		// We check if the developer is providing aditional parameters
-		if(isset($parameters)) {
-			$parameters($match);
+		if(isset($callback)) {
+			$callback($match);
 		}
 
 		$match->query($matching);
@@ -114,12 +130,12 @@ class Builder extends BaseBuilder {
 	 *
 	 * @param  string  		$field
 	 * @param  mixed   		$value
-	 * @param  Closure|null $parameters
+	 * @param  Closure|null $callback
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function matchPhrase($field, $matching, Closure $parameters = null)
+	public function matchPhrase($field, $matching, Closure $callback = null)
 	{
-		return $this->match($field, $matching, $parameters, 'phrase');
+		return $this->match($field, $matching, $callback, 'phrase');
 	}
 
 	/**
@@ -127,23 +143,70 @@ class Builder extends BaseBuilder {
 	 *
 	 * @param  string       $fiel
 	 * @param  mixed       	$matching
-	 * @param  Closure|null $parameters
+	 * @param  Closure|null $callback
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function matchPhrasePrefix($field, $matching, Closure $parameters = null)
+	public function matchPhrasePrefix($field, $matching, Closure $callback = null)
 	{
-		return $this->match($field, $matching, $parameters, 'phrase_prefix');
+		return $this->match($field, $matching, $callback, 'phrase_prefix');
+	}
+
+	/**
+	 * Elastic multi match query.
+	 *
+	 * @param  array        $fields
+	 * @param  string       $matching
+	 * @param  Closure|null $callback
+	 * @param  string       $type
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function multiMatch(array $fields, $matching, Closure $callback = null, $type = 'best_fields')
+	{
+		$match = new Clause;
+		$match->setConstraints(['query', 'fields', 'type', 'tie_breaker', 'analyzer', 'boost', 'operator', 'minimum_should_match', 'fuzziness', 'prefix_length', 'max_expansions', 'rewrite', 'zero_terms_query', 'cutoff_frequency']);
+
+		// We check if the developer is providing aditional parameters
+		if(isset($callback)) {
+			$callback($match);
+		}
+
+		$match->fields($fields);
+		$match->query($matching);
+		$match->type($type);
+
+		$this->setStatement('multi_match', $fields, $match);
+
+		return $this;
+	}
+
+	/**
+	 * Elastic bool query.
+	 *
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function bool(Closure $callback)
+	{
+		$bool = new Bool($this);
+
+		$callback($bool);
+
+		$this->setStatement('bool', null, $bool);
+
+		return $this;
 	}
 
 	/**
 	 * Set a single statement of the builder.
 	 *
 	 * @param string $type
+	 * @param mixed $field
 	 * @param mixed $value
+	 * @return void
 	 */
 	protected function setSingleStatement($type, $field, $value)
 	{
-		$this->singleStatement = ['type' => $type, 'statement' => [$field => $value]];
+		$this->singleStatement = ['type' => Str::camel($type), 'field' => $field, 'value' => $value];
 	}
 
 	/**
@@ -160,9 +223,10 @@ class Builder extends BaseBuilder {
 	 * Set a statement to the builder.
 	 *
 	 * @param string  $type
-	 * @param string  $field
+	 * @param mixed   $field
 	 * @param mixed   $value
 	 * @param boolean $single
+	 * @return void
 	 */
 	protected function setStatement($type, $field, $value, $single = true)
 	{
@@ -171,9 +235,9 @@ class Builder extends BaseBuilder {
 		}
 		else
 		{
-			$container = Pluralizer::plural($type);
+			$container = Str::camel($type);
 
-			$this->$container = array_merge($this->$container, [$field => $value]);
+			$this->$container = array_merge($this->$container, [['field' => $field, 'value' => $value]]);
 		}
 	}
 
@@ -207,6 +271,16 @@ class Builder extends BaseBuilder {
 	public function toJson($options = 0)
 	{
 		return json_encode($this->toArray(), $options);
+	}
+
+	/**
+	 * Creates a new instance of the builder.
+	 *
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function newInstance()
+	{
+		return new static($this->connection, $this->grammar, $this->processor);
 	}
 
 }

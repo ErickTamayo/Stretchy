@@ -47,6 +47,75 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"query":"bar","type":"phrase_prefix"}}}}}', $json);
 	}
 
+	public function testSingleMultiMatch()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->multiMatch(['foo', 'bar'], 'baz');
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"multi_match":{"fields":["foo","bar"],"query":"baz","type":"best_fields"}}}}', $json);
+	}
+
+	public function testSingleBoolWithNestedMatch()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->match('foo', 'bar');
+			});
+
+			$query->mustNot(function($mustNot)
+			{
+				$mustNot->match('foo', 'baz');
+			});
+
+			$query->should(function($should)
+			{
+				$should->match('foo', 'bah');
+			});
+
+			$query->minimumShouldMatch(1);
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"should":[{"match":{"foo":{"query":"bah","type":"boolean"}}}],"must_not":[{"match":{"foo":{"query":"baz","type":"boolean"}}}],"must":[{"match":{"foo":{"query":"bar","type":"boolean"}}}],"minimum_should_match":1}}}}', $json);
+	}
+
+	public function testNestedBool()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->match('foo', 'bar');
+
+				$must->bool(function($subQuery)
+				{
+					$subQuery->must(function($must)
+					{
+						$must->match('foo', 'baz');
+					});
+
+					$subQuery->boost(1.0);
+				});
+			});
+
+			$query->minimumShouldMatch(1);
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"match":{"foo":{"query":"bar","type":"boolean"}}},{"bool":{"must":[{"match":{"foo":{"query":"baz","type":"boolean"}}}],"boost":1}}],"minimum_should_match":1}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

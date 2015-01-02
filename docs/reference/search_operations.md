@@ -104,3 +104,22 @@ Stretchy::search('foo')
 	})
 	->get();
 ```
+
+# Common terms query
+
+For **common terms** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-common-terms-query.html)
+
+```php
+Stretchy::search('foo')
+		->common('bar', 'The brown fox', function($query)
+		{
+			$query->cutoffFrequency(0.001);
+
+			$query->minimumShouldMatch(function($minimumShouldMatch)
+			{
+				$minimumShouldMatch->lowFreq(2);
+				$minimumShouldMatch->highFreq(3);
+			});
+		})
+		->get();
+```

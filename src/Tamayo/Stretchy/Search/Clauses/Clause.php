@@ -50,7 +50,7 @@ class Clause
 		$constraint = Str::snake($constraint);
 
 		if(! in_array($constraint, $this->constraints)) {
-			throw new \InvalidArgumentException("Unavailable constraint {$constraint}", 1);
+			throw new \InvalidArgumentException("Unavailable constraint: [{$constraint}]", 1);
 		}
 
 		$value = $arguments[0];
@@ -96,5 +96,15 @@ class Clause
 		$container = $query;
 
 		return $this;
+	}
+
+	/**
+	 * Convert the clause to array.
+	 *
+	 * @return array
+	 */
+	public function toArray()
+	{
+		return $this->container;
 	}
 }

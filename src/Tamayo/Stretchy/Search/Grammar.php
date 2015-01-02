@@ -29,7 +29,8 @@ class Grammar extends BaseGrammar {
 			$body = array_merge_recursive(
 				$this->compileMatches($builder),
 				$this->compileBools($builder),
-				$this->compileBoostings($builder)
+				$this->compileBoostings($builder),
+				$this->compileCommons($builder)
 			);
 		}
 
@@ -80,9 +81,9 @@ class Grammar extends BaseGrammar {
 	 */
 	protected function compileMatch($match)
 	{
-		$subCompile = $this->compile($match['field'], $this->compileClause($match['value']));
+		$subCompiled = $this->compile($match['field'], $this->compileClause($match['value']));
 
-		return $this->compile('match', $subCompile);
+		return $this->compile('match', $subCompiled);
 	}
 
 	/**
@@ -158,6 +159,36 @@ class Grammar extends BaseGrammar {
 		$compiled = $this->compileClause($boosting['value'], $subClauses);
 
 		return $this->compile('boosting', $compiled);
+	}
+
+	/**
+	 * Compile common statements.
+	 *
+	 * @param  Builder $builder
+	 * @return array
+	 */
+	public function compileCommons(Builder $builder)
+	{
+		$compiled = array();
+
+		foreach ($builder->common as $common) {
+			$compiled[] = $this->compileCommon($common);
+		}
+
+		return $compiled;
+	}
+
+	/**
+	 * Compile a common statement.
+	 *
+	 * @param  array $common
+	 * @return array
+	 */
+	public function compileCommon($common)
+	{
+		$subCompiled = $this->compile($common['field'], $this->compileClause($common['value'], ['minimumShouldMatch']));
+
+		return $this->compile('common', $subCompiled);
 	}
 
 	/**

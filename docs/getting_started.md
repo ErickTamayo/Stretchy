@@ -4,7 +4,7 @@ Getting Started
 Installation
 ----
 
-1. In your **composer.json**, add the dependency: `"tamayo/stretchy":"1.0.*"`
+1. In your **composer.json**, add the dependency: `"tamayo/stretchy": "dev-master"`
 
 2. Add the Stretchy service provider in your app.config:
 ```php

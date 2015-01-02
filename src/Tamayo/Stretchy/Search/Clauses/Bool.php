@@ -13,21 +13,21 @@ class Bool extends Clause
 	protected $constraints = ['minimum_should_match', 'boost'];
 
 	/**
-	 * Must not sub clause.
+	 * Must not subquery.
 	 *
 	 * @var \Tamayo\Stretchy\Search\Builder
 	 */
 	public $mustNot;
 
 	/**
-	 * Must sub clause.
+	 * Must subquery.
 	 *
 	 * @var \Tamayo\Stretchy\Search\Builder
 	 */
 	public $must;
 
 	/**
-	 * Should sub clause.
+	 * Should subquery.
 	 *
 	 * @var \Tamayo\Stretchy\Search\Builder
 	 */
@@ -41,7 +41,7 @@ class Bool extends Clause
 	 */
 	public function must(Closure $callback)
 	{
-		return $this->addSubClause($this->must, $callback);
+		return $this->addSubquery($this->must, $callback);
 	}
 
 	/**
@@ -52,7 +52,7 @@ class Bool extends Clause
 	 */
 	public function mustNot(Closure $callback)
 	{
-		return $this->addSubClause($this->mustNot, $callback);
+		return $this->addSubquery($this->mustNot, $callback);
 	}
 
 	/**
@@ -63,7 +63,7 @@ class Bool extends Clause
 	 */
 	public function should(Closure $callback)
 	{
-		return $this->addSubClause($this->should, $callback);
+		return $this->addSubquery($this->should, $callback);
 	}
 
 }

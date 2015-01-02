@@ -10,12 +10,12 @@ class Common extends Clause
 	 *
 	 * @var array
 	 */
-	protected $constraints = ['query', 'cutoff_frequency', 'high_freq', 'low_freq', 'low_freq_operator', 'high_freq_operator', 'boost', 'analyzer', 'disable_coord'];
+	protected $constraints = ['query', 'cutoff_frequency', 'low_freq_operator', 'high_freq_operator', 'boost', 'analyzer', 'disable_coord'];
 
 	/**
 	 * Should sub clause.
 	 *
-	 * @var \Tamayo\Stretchy\Search\Builder
+	 * @var \Tamayo\Stretchy\Search\Clauses\Clause
 	 */
 	public $minimumShouldMatch;
 
@@ -27,17 +27,7 @@ class Common extends Clause
 	 */
 	public function minimumShouldMatch(Closure $callback)
 	{
-		$minimumShouldMatch = new Clause($this->builder);
-
-		$minimumShouldMatch->setConstraints(['low_freq', 'high_freq']);
-
-		$callback($minimumShouldMatch);
-
-		$this->minimumShouldMatch = $minimumShouldMatch;
-
-		return $this;
+		return $this->addSubclause($this->minimumShouldMatch, ['low_freq', 'high_freq'], $callback);
 	}
-
-
 
 }

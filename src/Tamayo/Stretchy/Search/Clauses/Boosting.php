@@ -14,14 +14,14 @@ class Boosting extends Clause
 	protected $constraints = ['negative_boost'];
 
 	/**
-	 * Positive boosting sub clause.
+	 * Positive boosting subquery.
 	 *
 	 * @var array
 	 */
 	public $positive;
 
 	/**
-	 * Negative boosting sub clause.
+	 * Negative boosting subquery.
 	 *
 	 * @var array
 	 */
@@ -35,7 +35,7 @@ class Boosting extends Clause
 	 */
 	public function positive(Closure $callback)
 	{
-		return $this->addSubClause($this->positive, $callback);
+		return $this->addSubquery($this->positive, $callback);
 	}
 
 	/**
@@ -46,7 +46,7 @@ class Boosting extends Clause
 	 */
 	public function negative(Closure $callback)
 	{
-		return $this->addSubClause($this->negative, $callback);
+		return $this->addSubquery($this->negative, $callback);
 	}
 
 }

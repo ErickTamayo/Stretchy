@@ -110,11 +110,30 @@ class Clause
 	/**
 	 * Add a sub clause to a container an executes its callback.
 	 *
-	 * @param array   &$container
+	 * @param array  &$container
 	 * @param Closure $callback
 	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
 	 */
-	public function addSubClause(&$container, Closure $callback)
+	public function addSubclause(&$container, array $constraints, Closure $callback)
+	{
+		$clause = new static($this->builder);
+
+		$clause->setConstraints($constraints);
+
+		$callback($clause);
+
+		$container = $clause;
+
+		return $this;
+	}
+
+	/**
+	 * Add a sub query to a containter and execute its callback.
+	 *
+	 * @param array  &$container
+	 * @param Closure $callback
+	 */
+	public function addSubquery(&$container, Closure $callback)
 	{
 		$query = $this->builder->newInstance()->setSubquery();
 

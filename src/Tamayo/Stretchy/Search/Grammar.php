@@ -27,7 +27,7 @@ class Grammar extends BaseGrammar {
 		else
 		{
 			$body = $this->compileSubqueries($builder, [
-				'match', 'multi_match', 'bool', 'boosting', 'common', 'term'
+				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score'
 			]);
 		}
 
@@ -115,9 +115,23 @@ class Grammar extends BaseGrammar {
 	 */
 	public function compileCommon($common)
 	{
-		$subCompiled = $this->compile($common['field'], $this->compileClause($common['value'], ['minimumShouldMatch']));
+		$compiled = $this->compile($common['field'], $this->compileClause($common['value'], ['minimumShouldMatch']));
 
-		return $this->compile('common', $subCompiled);
+		return $this->compile('common', $compiled);
+	}
+
+	/**
+	 * Compile a constant score statement.
+	 * @param  array $constantScore
+	 * @return array
+	 */
+	public function compileConstantScore($constantScore)
+	{
+		$subClauses = ['filter', 'query'];
+
+		$compiled = $this->compileClause($constantScore['value'], $subClauses);
+
+		return $this->compile('constant_score', $compiled);
 	}
 
 	/**

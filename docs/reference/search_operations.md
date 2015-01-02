@@ -141,6 +141,22 @@ Stretchy::search('foo')
 		->get();
 ```
 
+# Constant score query
+
+For **constant score** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-constant-score-query.html#query-dsl-constant-score-query)
+
+```php
+Stretchy::search('foo')
+	->constantScore(function($constantScore)
+	{
+		$constantScore->filter(function($filter)
+		{
+			$filter->term('bar', 'baz');
+		});
+	})
+	->get();
+```
+
 # Term query
 
 For **term** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-term-query.html)

@@ -9,6 +9,7 @@ use Tamayo\Stretchy\Search\Clauses\Bool;
 use Tamayo\Stretchy\Search\Clauses\Clause;
 use Tamayo\Stretchy\Search\Clauses\Common;
 use Tamayo\Stretchy\Search\Clauses\Boosting;
+use Tamayo\Stretchy\Search\Clauses\ConstantScore;
 use Tamayo\Stretchy\Builder as BaseBuilder;
 
 class Builder extends BaseBuilder {
@@ -251,6 +252,23 @@ class Builder extends BaseBuilder {
 		$common->query($value);
 
 		$this->setStatement('common', $field, $common);
+
+		return $this;
+	}
+
+	/**
+	 * Elastic constant score query.
+	 *
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function constantScore(Closure $callback)
+	{
+		$constantScore = new ConstantScore($this);
+
+		$callback($constantScore);
+
+		$this->setStatement('constant_score', null, $constantScore);
 
 		return $this;
 	}

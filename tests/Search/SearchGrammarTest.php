@@ -248,6 +248,23 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"term":{"foo":{"boost":2,"value":"bar"}}}]}}}}', $json);
 	}
 
+	public function testConstantScore()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->constantScore(function($constantScore)
+		{
+			$constantScore->filter(function($filter)
+			{
+				$filter->term('foo', 'bar');
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"constant_score":{"filter":[{"term":{"foo":{"value":"bar"}}}]}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

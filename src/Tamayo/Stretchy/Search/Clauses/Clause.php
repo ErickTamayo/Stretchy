@@ -1,6 +1,8 @@
 <?php namespace Tamayo\Stretchy\Search\Clauses;
 
+use Closure;
 use Illuminate\Support\Str;
+use Tamayo\Stretchy\Search\Builder;
 
 class Clause
 {
@@ -18,6 +20,24 @@ class Clause
 	 * @var array
 	 */
 	protected $constraints = [];
+
+	/**
+	 * The current builder instance.
+	 *
+	 * @var \Tamayo\Stretchy\Search\Builder
+	 */
+	protected $builder;
+
+	/**
+	 * Create a new boolean clause.
+	 *
+	 * @param \Tamayo\Stretchy\Search\Builder $builder
+	 * @param Grammar                     $grammar
+	 */
+	public function __construct(Builder $builder)
+	{
+		$this->builder = $builder;
+	}
 
 	/**
 	 * Set a constraint.
@@ -58,5 +78,23 @@ class Clause
 	public function setConstraints($constraints)
 	{
 		$this->constraints = $constraints;
+	}
+
+	/**
+	 * Add a sub clause to a container an executes its callback.
+	 *
+	 * @param array   &$container
+	 * @param Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
+	 */
+	public function addSubClause(&$container, Closure $callback)
+	{
+		$query = $this->builder->newInstance()->setSubquery();
+
+		$callback($query);
+
+		$container = $query;
+
+		return $this;
 	}
 }

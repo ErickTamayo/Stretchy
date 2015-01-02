@@ -1,7 +1,6 @@
 <?php namespace Tamayo\Stretchy\Search\Clauses;
 
 use Closure;
-use Tamayo\Stretchy\Search\Builder;
 use Tamayo\Stretchy\Search\Clauses\Clause;
 
 class Bool extends Clause
@@ -14,43 +13,26 @@ class Bool extends Clause
 	protected $constraints = ['minimum_should_match', 'boost'];
 
 	/**
-	 * Must not sub clauses.
+	 * Must not sub clause.
 	 *
-	 * @var array
+	 * @var \Tamayo\Stretchy\Search\Builder
 	 */
 	public $mustNot;
 
 	/**
-	 * Must sub clauses.
+	 * Must sub clause.
 	 *
-	 * @var array
+	 * @var \Tamayo\Stretchy\Search\Builder
 	 */
 	public $must;
 
 	/**
-	 * Should sub clauses.
-	 *
-	 * @var array
-	 */
-	public $should;
-
-	/**
-	 * The current builder instance.
+	 * Should sub clause.
 	 *
 	 * @var \Tamayo\Stretchy\Search\Builder
 	 */
-	protected $builder;
+	public $should;
 
-	/**
-	 * Create a new boolean clause.
-	 *
-	 * @param \Tamayo\Stretchy\Search\Builder $builder
-	 * @param Grammar                     $grammar
-	 */
-	public function __construct(Builder $builder)
-	{
-		$this->builder = $builder;
-	}
 	/**
 	 * Must Clause.
 	 *
@@ -82,24 +64,6 @@ class Bool extends Clause
 	public function should(Closure $callback)
 	{
 		return $this->addSubClause($this->should, $callback);
-	}
-
-	/**
-	 * Add a sub clause to a container an executes its callback.
-	 *
-	 * @param array   &$container
-	 * @param Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
-	 */
-	public function addSubClause(&$container, Closure $callback)
-	{
-		$query = $this->builder->newInstance()->setSubquery();
-
-		$callback($query);
-
-		$container = $query;
-
-		return $this;
 	}
 
 }

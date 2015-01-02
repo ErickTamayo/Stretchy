@@ -28,7 +28,8 @@ class Grammar extends BaseGrammar {
 		{
 			$body = array_merge_recursive(
 				$this->compileMatches($builder),
-				$this->compileBools($builder)
+				$this->compileBools($builder),
+				$this->compileBoostings($builder)
 			);
 		}
 
@@ -120,20 +121,43 @@ class Grammar extends BaseGrammar {
 	 */
 	public function compileBool($bool)
 	{
-		$compiled = array();
+		$subClauses = ['must', 'mustNot', 'should'];
 
-		//Compile must, must not and should sub clauses
-		foreach (['must', 'mustNot', 'should'] as $subClause) {
-			if (isset($bool['value']->$subClause)) {
-				$compiled = array_merge($this->compile(Str::snake($subClause), $bool['value']->$subClause->toArray()), $compiled);
-			}
-		}
-
-		$compiledClause = $this->compileClause($bool['value']);
-
-		$compiled = isset($compiledClause) ? array_merge($compiled, $compiledClause) : $compiled;
+		$compiled = $this->compileClause($bool['value'], $subClauses);
 
 		return $this->compile('bool', $compiled);
+	}
+
+	/**
+	 * Compile boosting statements.
+	 *
+	 * @param  Builder $builder
+	 * @return array
+	 */
+	public function compileBoostings(Builder $builder)
+	{
+		$compiled = array();
+
+		foreach ($builder->boosting as $boosting) {
+			$compiled[] = $this->compileBoosting($boosting);
+		}
+
+		return $compiled;
+	}
+
+	/**
+	 * Compile a boosting statement.
+	 *
+	 * @param  array $boosting
+	 * @return array
+	 */
+	public function compileBoosting($boosting)
+	{
+		$subClauses = ['positive', 'negative'];
+
+		$compiled = $this->compileClause($boosting['value'], $subClauses);
+
+		return $this->compile('boosting', $compiled);
 	}
 
 	/**
@@ -143,9 +167,15 @@ class Grammar extends BaseGrammar {
 	 * @param  array|null $container
 	 * @return array
 	 */
-	protected function compileClause(Clause $clause)
+	protected function compileClause(Clause $clause, $subClauses = array())
 	{
 		$compiled = $clause->getAffectedConstraints();
+
+		foreach ($subClauses as $subClause) {
+			if (isset($clause->$subClause)) {
+				$compiled = array_merge($this->compile(Str::snake($subClause), $clause->$subClause->toArray()), $compiled);
+			}
+		}
 
 		if (empty($compiled)) {
 			return null;

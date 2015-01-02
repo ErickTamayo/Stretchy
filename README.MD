@@ -2,7 +2,7 @@ Stretchy
 =========
 [![Build Status](https://travis-ci.org/ErickTamayo/Stretchy.svg?branch=master)](https://travis-ci.org/ErickTamayo/Stretchy)
 
-Stretchy in an [ElasticSearch] integration for Laravel.
+Stretchy in an [Elasticsearch] integration for Laravel.
 
 Heavily Inspired by Query Builder and Schema of laravel.
 

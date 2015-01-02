@@ -81,3 +81,26 @@ Stretchy::search('foo')
 	})
 	->get();
 ```
+
+# Boosting query
+
+For **boosting** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-boosting-query.html)
+
+```php
+Stretchy::search('foo')
+	->boosting(function($query)
+	{
+		$query->positive(function($positive)
+		{
+			$positive->match('bar', 'baz');
+		});
+
+		$query->negative(function($negative)
+		{
+			$negative->match('bar', 'bah');
+		});
+
+		$query->negativeBoost(0.2);
+	})
+	->get();
+```

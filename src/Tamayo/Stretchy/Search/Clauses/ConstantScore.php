@@ -30,14 +30,19 @@ class ConstantScore extends Clause
 	 * Filter subquery.
 	 *
 	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
+	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
 	public function filter(Closure $callback)
 	{
 		return $this->addSubquery($this->filter, $callback);
 	}
 
-
+	/**
+	 * Query subquery.
+	 *
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
 	public function query(Closure $callback)
 	{
 		return $this->addSubquery($this->query, $callback);

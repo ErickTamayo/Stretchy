@@ -23,7 +23,7 @@ class Common extends Clause
 	 * Minimun should match sub clause.
 	 *
 	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
+	 * @return \Tamayo\Stretchy\Search\Clauses\Clause
 	 */
 	public function minimumShouldMatch(Closure $callback)
 	{

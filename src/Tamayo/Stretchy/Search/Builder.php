@@ -6,6 +6,7 @@ use Tamayo\Stretchy\Connection;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Processor;
 use Tamayo\Stretchy\Search\Clauses\Bool;
+use Tamayo\Stretchy\Search\Clauses\DisMax;
 use Tamayo\Stretchy\Search\Clauses\Clause;
 use Tamayo\Stretchy\Search\Clauses\Common;
 use Tamayo\Stretchy\Search\Clauses\Boosting;
@@ -273,6 +274,17 @@ class Builder extends BaseBuilder {
 		return $this;
 	}
 
+	public function disMax(Closure $callback)
+	{
+		$disMax = new DisMax($this);
+
+		$callback($disMax);
+
+		$this->setStatement('dis_max', null, $disMax);
+
+		return $this;
+	}
+
 	/**
 	 * Elastic term query.
 	 *
@@ -356,7 +368,7 @@ class Builder extends BaseBuilder {
 		{
 			$container = Str::camel($type);
 
-			$this->$container = isset($this->$container) ? : array();
+			$this->$container = isset($this->$container) ? $this->$container : array();
 
 			$this->$container = array_merge($this->$container, [['field' => $field, 'value' => $value]]);
 		}

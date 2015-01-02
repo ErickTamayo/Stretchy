@@ -157,6 +157,26 @@ Stretchy::search('foo')
 	->get();
 ```
 
+# Dis max query
+
+For **dis max** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-dis-max-query.html)
+
+```php
+Stretchy::search('foo')
+	->disMax(function($disMax)
+	{
+		$disMax->tieBreaker(0.7);
+		$disMax->boost(1.2);
+
+		$disMax->queries(function($queries)
+		{
+			$queries->term('age', 34);
+			$queries->term('age', 35);
+		});
+	})
+	->get();
+```
+
 # Term query
 
 For **term** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-term-query.html)
@@ -179,7 +199,5 @@ Stretchy::search('foo')
 or
 
 ```php
-Stretchy::search('foo')
-	->term('bar', 'baz', ['boost' => 2])
-	->get();
+Stretchy::search('foo')->term('bar', 'baz', ['boost' => 2])->get();
 ```

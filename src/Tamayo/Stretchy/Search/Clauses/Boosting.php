@@ -31,7 +31,7 @@ class Boosting extends Clause
 	 * Positive Clause.
 	 *
 	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
+	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
 	public function positive(Closure $callback)
 	{
@@ -42,7 +42,7 @@ class Boosting extends Clause
 	 * Positive Clause.
 	 *
 	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
+	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
 	public function negative(Closure $callback)
 	{

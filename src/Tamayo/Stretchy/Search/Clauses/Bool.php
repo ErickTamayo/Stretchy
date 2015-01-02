@@ -48,7 +48,7 @@ class Bool extends Clause
 	 * Must Clause.
 	 *
 	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
+	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
 	public function mustNot(Closure $callback)
 	{
@@ -59,7 +59,7 @@ class Bool extends Clause
 	 * Must Clause.
 	 *
 	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
+	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
 	public function should(Closure $callback)
 	{

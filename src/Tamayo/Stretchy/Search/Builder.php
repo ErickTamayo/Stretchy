@@ -7,6 +7,8 @@ use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Processor;
 use Tamayo\Stretchy\Search\Clauses\Bool;
 use Tamayo\Stretchy\Search\Clauses\Clause;
+use Tamayo\Stretchy\Search\Clauses\Common;
+use Tamayo\Stretchy\Search\Clauses\Boosting;
 use Tamayo\Stretchy\Builder as BaseBuilder;
 
 class Builder extends BaseBuilder {
@@ -19,7 +21,7 @@ class Builder extends BaseBuilder {
 	protected $processor;
 
 	/**
-	 * Determines if the builder is a subquery.
+	 * Indicates if the builder is a subquery.
 	 *
 	 * @var boolean
 	 */
@@ -33,25 +35,38 @@ class Builder extends BaseBuilder {
 	public $singleStatement;
 
 	/**
-	 * The matching constraints of the query.
+	 * Match constraints of the query.
 	 *
 	 * @var array
 	 */
 	public $match = [];
 
 	/**
-	 * The multi match constraints of the query.
+	 * Multi match constraints of the query.
 	 *
 	 * @var array
 	 */
 	public $multiMatch = [];
 
 	/**
-	 * The boolean constraints of the query.
+	 * Boolean constraints of the query.
 	 *
 	 * @var array
 	 */
 	public $bool = [];
+
+	/**
+	 * Boosting constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $boosting = [];
+
+	/**
+	 * Common constraints of the query.
+	 * @var array
+	 */
+	public $common = [];
 
 	/**
 	 * Create a new search builder.
@@ -109,7 +124,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function match($field, $matching, Closure $callback = null, $type = 'boolean')
 	{
-		$match = new Clause;
+		$match = new Clause($this);
 		$match->setConstraints(['query', 'operator', 'zero_terms_query', 'cutoff_frequency', 'type', 'lenient', 'analizer']);
 
 		// We check if the developer is providing aditional parameters
@@ -162,7 +177,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function multiMatch(array $fields, $matching, Closure $callback = null, $type = 'best_fields')
 	{
-		$match = new Clause;
+		$match = new Clause($this);
 		$match->setConstraints(['query', 'fields', 'type', 'tie_breaker', 'analyzer', 'boost', 'operator', 'minimum_should_match', 'fuzziness', 'prefix_length', 'max_expansions', 'rewrite', 'zero_terms_query', 'cutoff_frequency']);
 
 		// We check if the developer is providing aditional parameters
@@ -192,6 +207,47 @@ class Builder extends BaseBuilder {
 		$callback($bool);
 
 		$this->setStatement('bool', null, $bool);
+
+		return $this;
+	}
+
+	/**
+	 * Elastic boosting query.
+	 *
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function boosting(Closure $callback)
+	{
+		$boosting = new Boosting($this);
+
+		$callback($boosting);
+
+		$this->setStatement('boosting', null, $boosting);
+
+		return $this;
+	}
+
+	/**
+	 * Elastic common query.
+	 *
+	 * @param  string       $field
+	 * @param  string       $value
+	 * @param  Closure|null $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function common($field, $value, Closure $callback = null)
+	{
+		$common = new Common($this);
+
+		// We check if the developer is providing aditional parameters
+		if(isset($callback)) {
+			$callback($common);
+		}
+
+		$common->query($value);
+
+		$this->setStatement('common', $field, $common);
 
 		return $this;
 	}

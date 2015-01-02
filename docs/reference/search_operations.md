@@ -81,3 +81,45 @@ Stretchy::search('foo')
 	})
 	->get();
 ```
+
+# Boosting query
+
+For **boosting** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-boosting-query.html)
+
+```php
+Stretchy::search('foo')
+	->boosting(function($query)
+	{
+		$query->positive(function($positive)
+		{
+			$positive->match('bar', 'baz');
+		});
+
+		$query->negative(function($negative)
+		{
+			$negative->match('bar', 'bah');
+		});
+
+		$query->negativeBoost(0.2);
+	})
+	->get();
+```
+
+# Common terms query
+
+For **common terms** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-common-terms-query.html)
+
+```php
+Stretchy::search('foo')
+		->common('bar', 'The brown fox', function($query)
+		{
+			$query->cutoffFrequency(0.001);
+
+			$query->minimumShouldMatch(function($minimumShouldMatch)
+			{
+				$minimumShouldMatch->lowFreq(2);
+				$minimumShouldMatch->highFreq(3);
+			});
+		})
+		->get();
+```

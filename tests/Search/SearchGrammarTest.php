@@ -116,6 +116,107 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"match":{"foo":{"query":"bar","type":"boolean"}}},{"bool":{"must":[{"match":{"foo":{"query":"baz","type":"boolean"}}}],"boost":1}}],"minimum_should_match":1}}}}', $json);
 	}
 
+	public function testSingleBoosting()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->boosting(function($query)
+		{
+			$query->positive(function($positive)
+			{
+				$positive->match('bar', 'baz');
+			});
+
+			$query->negative(function($negative)
+			{
+				$negative->match('bar', 'bah');
+			});
+
+			$query->negativeBoost(0.2);
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"boosting":{"negative":[{"match":{"bar":{"query":"bah","type":"boolean"}}}],"positive":[{"match":{"bar":{"query":"baz","type":"boolean"}}}],"negative_boost":0.2}}}}', $json);
+	}
+
+	public function testNestedBoosting()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->boosting(function($query)
+				{
+					$query->positive(function($positive)
+					{
+						$positive->match('bar', 'baz');
+					});
+
+					$query->negative(function($negative)
+					{
+						$negative->match('bar', 'bah');
+					});
+
+					$query->negativeBoost(0.2);
+				});
+			});
+
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"boosting":{"negative":[{"match":{"bar":{"query":"bah","type":"boolean"}}}],"positive":[{"match":{"bar":{"query":"baz","type":"boolean"}}}],"negative_boost":0.2}}]}}}}',$json);
+	}
+
+	public function testSingleCommonTerms()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->common('foo', 'bar', function($query)
+		{
+			$query->cutoffFrequency(0.001);
+
+			$query->minimumShouldMatch(function($minimumShouldMatch)
+			{
+				$minimumShouldMatch->lowFreq(2);
+				$minimumShouldMatch->highFreq(3);
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"common":{"foo":{"minimum_should_match":{"low_freq":2,"high_freq":3},"cutoff_frequency":0.001,"query":"bar"}}}}}', $json);
+	}
+
+	public function testNestedCommonTerms()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->common('foo', 'bar', function($query)
+				{
+					$query->cutoffFrequency(0.001);
+
+					$query->minimumShouldMatch(function($minimumShouldMatch)
+					{
+						$minimumShouldMatch->lowFreq(2);
+						$minimumShouldMatch->highFreq(3);
+					});
+				});
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"common":{"foo":{"minimum_should_match":{"low_freq":2,"high_freq":3},"cutoff_frequency":0.001,"query":"bar"}}}]}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

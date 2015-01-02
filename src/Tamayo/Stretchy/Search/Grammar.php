@@ -27,7 +27,7 @@ class Grammar extends BaseGrammar {
 		else
 		{
 			$body = $this->compileSubqueries($builder, [
-				'match', 'multi_match', 'bool', 'boosting', 'common', 'term'
+				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score', 'dis_max'
 			]);
 		}
 
@@ -72,7 +72,7 @@ class Grammar extends BaseGrammar {
 	 * @param  array $multiMatch
 	 * @return array
 	 */
-	public function compileMultiMatch($multiMatch)
+	protected function compileMultiMatch($multiMatch)
 	{
 		return $this->compile('multi_match', $this->compileClause($multiMatch['value']));
 	}
@@ -83,11 +83,9 @@ class Grammar extends BaseGrammar {
 	 * @param  array $bool
 	 * @return array
 	 */
-	public function compileBool($bool)
+	protected function compileBool($bool)
 	{
-		$subClauses = ['must', 'mustNot', 'should'];
-
-		$compiled = $this->compileClause($bool['value'], $subClauses);
+		$compiled = $this->compileClause($bool['value'], ['must', 'mustNot', 'should']);
 
 		return $this->compile('bool', $compiled);
 	}
@@ -98,11 +96,9 @@ class Grammar extends BaseGrammar {
 	 * @param  array $boosting
 	 * @return array
 	 */
-	public function compileBoosting($boosting)
+	protected function compileBoosting($boosting)
 	{
-		$subClauses = ['positive', 'negative'];
-
-		$compiled = $this->compileClause($boosting['value'], $subClauses);
+		$compiled = $this->compileClause($boosting['value'], ['positive', 'negative']);
 
 		return $this->compile('boosting', $compiled);
 	}
@@ -113,11 +109,35 @@ class Grammar extends BaseGrammar {
 	 * @param  array $common
 	 * @return array
 	 */
-	public function compileCommon($common)
+	protected function compileCommon($common)
 	{
-		$subCompiled = $this->compile($common['field'], $this->compileClause($common['value'], ['minimumShouldMatch']));
+		$compiled = $this->compile($common['field'], $this->compileClause($common['value'], ['minimumShouldMatch']));
 
-		return $this->compile('common', $subCompiled);
+		return $this->compile('common', $compiled);
+	}
+
+	/**
+	 * Compile a constant score statement.
+	 * @param  array $constantScore
+	 * @return array
+	 */
+	protected function compileConstantScore($constantScore)
+	{
+		$compiled = $this->compileClause($constantScore['value'], ['filter', 'query']);
+
+		return $this->compile('constant_score', $compiled);
+	}
+
+	/**
+	 * Compile a dis max statement.
+	 * @param  array $disMax
+	 * @return array
+	 */
+	protected function compileDisMax($disMax)
+	{
+		$compiled = $this->compileClause($disMax['value'], ['queries']);
+
+		return $this->compile('dis_max', $compiled);
 	}
 
 	/**
@@ -126,7 +146,7 @@ class Grammar extends BaseGrammar {
 	 * @param  array $term
 	 * @return array
 	 */
-	public function compileTerm($term)
+	protected function compileTerm($term)
 	{
 		$subCompiled = $this->compile($term['field'], $this->compileClause($term['value']));
 

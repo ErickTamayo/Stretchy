@@ -248,6 +248,44 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"term":{"foo":{"boost":2,"value":"bar"}}}]}}}}', $json);
 	}
 
+	public function testConstantScore()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->constantScore(function($constantScore)
+		{
+			$constantScore->filter(function($filter)
+			{
+				$filter->term('foo', 'bar');
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"constant_score":{"filter":[{"term":{"foo":{"value":"bar"}}}]}}}}', $json);
+	}
+
+	public function testDisMax()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->disMax(function($disMax)
+		{
+			$disMax->tieBreaker(0.7);
+			$disMax->boost(1.2);
+
+			$disMax->queries(function($queries)
+			{
+				$queries->term('age', 34);
+				$queries->term('age', 35);
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"dis_max":{"queries":[{"term":{"age":{"value":34}}},{"term":{"age":{"value":35}}}],"tie_breaker":0.7,"boost":1.2}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

@@ -39,34 +39,41 @@ class Builder extends BaseBuilder {
 	 *
 	 * @var array
 	 */
-	public $match = [];
+	public $match;
 
 	/**
 	 * Multi match constraints of the query.
 	 *
 	 * @var array
 	 */
-	public $multiMatch = [];
+	public $multiMatch;
 
 	/**
 	 * Boolean constraints of the query.
 	 *
 	 * @var array
 	 */
-	public $bool = [];
+	public $bool;
 
 	/**
 	 * Boosting constraints of the query.
 	 *
 	 * @var array
 	 */
-	public $boosting = [];
+	public $boosting;
 
 	/**
 	 * Common constraints of the query.
 	 * @var array
 	 */
-	public $common = [];
+	public $common;
+
+	/**
+	 * Term constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $term;
 
 	/**
 	 * Create a new search builder.
@@ -117,22 +124,21 @@ class Builder extends BaseBuilder {
 	/**
 	 * Elastic Match Query.
 	 *
-	 * @param  string  $field
-	 * @param  mixed   $value
-	 * @param  Closure $callback
+	 * @param  string  			  $field
+	 * @param  mixed  			  $value
+	 * @param  Closure|array|null $parameters
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function match($field, $matching, Closure $callback = null, $type = 'boolean')
+	public function match($field, $matching, $parameters = null, $type = 'boolean')
 	{
 		$match = new Clause($this);
-		$match->setConstraints(['query', 'operator', 'zero_terms_query', 'cutoff_frequency', 'type', 'lenient', 'analizer']);
 
-		// We check if the developer is providing aditional parameters
-		if(isset($callback)) {
-			$callback($match);
-		}
+		$match->setConstraints(['query', 'fields', 'type', 'tie_breaker', 'analyzer', 'boost', 'operator', 'minimum_should_match', 'fuzziness', 'prefix_length', 'max_expansions', 'rewrite', 'zero_terms_query', 'cutoff_frequency', 'lenient']);
+
+		$this->addClauseParameters($match, $parameters);
 
 		$match->query($matching);
+
 		$match->type($type);
 
 		$this->setStatement('match', $field, $match);
@@ -169,24 +175,24 @@ class Builder extends BaseBuilder {
 	/**
 	 * Elastic multi match query.
 	 *
-	 * @param  array        $fields
-	 * @param  string       $matching
-	 * @param  Closure|null $callback
-	 * @param  string       $type
+	 * @param  array        	  $fields
+	 * @param  string       	  $matching
+	 * @param  Closure|array|null $parameters
+	 * @param  string       	  $type
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function multiMatch(array $fields, $matching, Closure $callback = null, $type = 'best_fields')
+	public function multiMatch(array $fields, $matching, Closure $parameters = null, $type = 'best_fields')
 	{
 		$match = new Clause($this);
+
 		$match->setConstraints(['query', 'fields', 'type', 'tie_breaker', 'analyzer', 'boost', 'operator', 'minimum_should_match', 'fuzziness', 'prefix_length', 'max_expansions', 'rewrite', 'zero_terms_query', 'cutoff_frequency']);
 
-		// We check if the developer is providing aditional parameters
-		if(isset($callback)) {
-			$callback($match);
-		}
+		$this->addClauseParameters($match, $parameters);
 
 		$match->fields($fields);
+
 		$match->query($matching);
+
 		$match->type($type);
 
 		$this->setStatement('multi_match', $fields, $match);
@@ -236,20 +242,59 @@ class Builder extends BaseBuilder {
 	 * @param  Closure|null $callback
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function common($field, $value, Closure $callback = null)
+	public function common($field, $value, $parameters = null)
 	{
 		$common = new Common($this);
 
-		// We check if the developer is providing aditional parameters
-		if(isset($callback)) {
-			$callback($common);
-		}
+		$this->addClauseParameters($common, $parameters);
 
 		$common->query($value);
 
 		$this->setStatement('common', $field, $common);
 
 		return $this;
+	}
+
+	/**
+	 * Elastic term query.
+	 *
+	 * @param  string       $field
+	 * @param  mixed        $value
+	 * @param  Closure|null $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function term($field, $value, $parameters = null)
+	{
+		$term = new Clause($this);
+
+		$term->setConstraints(['boost', 'value']);
+
+		$this->addClauseParameters($term, $parameters);
+
+		$term->value($value);
+
+		$this->setStatement('term', $field, $term);
+
+		return $this;
+	}
+
+	/**
+	 * Add a parameters to a clause.
+	 *
+	 * @param \Tamayo\Stretchy\Search\Clauses\Clause $clause
+	 * @param Closure|array 						 $parameters
+	 * @return Tamayo\Stretchy\Search\Clauses\Clause
+	 */
+	protected function addClauseParameters(Clause &$clause, $parameters)
+	{
+		if ($parameters instanceof Closure) {
+			$parameters($clause);
+		}
+		elseif (is_array($parameters)) {
+			$clause->addRawConstraints($parameters);
+		}
+
+		return $clause;
 	}
 
 	/**
@@ -292,6 +337,8 @@ class Builder extends BaseBuilder {
 		else
 		{
 			$container = Str::camel($type);
+
+			$this->$container = isset($this->$container) ? : array();
 
 			$this->$container = array_merge($this->$container, [['field' => $field, 'value' => $value]]);
 		}

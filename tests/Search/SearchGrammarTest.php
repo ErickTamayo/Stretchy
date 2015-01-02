@@ -217,6 +217,37 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"common":{"foo":{"minimum_should_match":{"low_freq":2,"high_freq":3},"cutoff_frequency":0.001,"query":"bar"}}}]}}}}', $json);
 	}
 
+	public function testSingleTerm()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->term('foo', 'bar', function($term)
+		{
+			$term->boost(2);
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"term":{"foo":{"boost":2,"value":"bar"}}}}}', $json);
+	}
+
+	public function testNestedTerm()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->term('foo', 'bar', ['boost' => 2]);
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"term":{"foo":{"boost":2,"value":"bar"}}}]}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

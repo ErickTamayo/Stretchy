@@ -23,15 +23,23 @@ Stretchy::search('foo')
 	->get();
 ```
 
+or
+
+```php
+Stretchy::search('foo')
+	->match('bar', 'baz', ['operator' => 'and', 'zero_terms_query' => 'all'])
+	->get();
+```
+
 ###phrase
 
 ```php
-Stretchy::search('foo')->matchPhrase('bar', 'Stretchy')->get();
+Stretchy::search('foo')->matchPhrase('bar', 'baz')->get();
 ```
 ###match_phrase_prefix
 
 ```php
-Stretchy::search('foo')->matchPhrasePrefix('bar', 'Stretchy')->get();
+Stretchy::search('foo')->matchPhrasePrefix('bar', 'baz')->get();
 ```
 
 # Multi Match Query
@@ -53,6 +61,15 @@ Stretchy::search('foo')
 	})
 	->get();
 ```
+
+or
+
+```php
+Stretchy::search('foo')
+	->multiMatch(['bar', 'baz'], 'bah', ['tie_breaker' => 0.3, 'type' => 'most_fields'])
+	->get();
+```
+
 
 # Bool query
 
@@ -122,4 +139,31 @@ Stretchy::search('foo')
 			});
 		})
 		->get();
+```
+
+# Term query
+
+For **term** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-term-query.html)
+
+```php
+Stretchy::search('foo')->term('bar', 'baz')->get();
+```
+
+To provide additional parameters:
+
+```php
+Stretchy::search('foo')
+	->term('bar', 'baz', function($term)
+	{
+		$term->boost(2);
+	})
+	->get();
+```
+
+or
+
+```php
+Stretchy::search('foo')
+	->term('bar', 'baz', ['boost' => 2])
+	->get();
 ```

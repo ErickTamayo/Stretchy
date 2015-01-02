@@ -26,12 +26,9 @@ class Grammar extends BaseGrammar {
 		}
 		else
 		{
-			$body = array_merge_recursive(
-				$this->compileMatches($builder),
-				$this->compileBools($builder),
-				$this->compileBoostings($builder),
-				$this->compileCommons($builder)
-			);
+			$body = $this->compileSubqueries($builder, [
+				'match', 'multi_match', 'bool', 'boosting', 'common', 'term'
+			]);
 		}
 
 		if ($builder->isSubquery()) {
@@ -54,23 +51,6 @@ class Grammar extends BaseGrammar {
 		$method = 'compile'.ucfirst($statement['type']);
 
 		return $this->compile('query', $this->$method($statement));
-	}
-
-	/**
-	 * Compile the match statements.
-	 *
-	 * @param  \Tamayo\Stretchy\Search\Builder $builder
-	 * @return array
-	 */
-	protected function compileMatches(Builder $builder)
-	{
-		$compiled = array();
-
-		foreach ($builder->match as $match) {
-			$compiled[] = $this->compileMatch($match);
-		}
-
-		return $compiled;
 	}
 
 	/**
@@ -98,23 +78,6 @@ class Grammar extends BaseGrammar {
 	}
 
 	/**
-	 * Compile boolean statements.
-	 *
-	 * @param  Builder $builder
-	 * @return array
-	 */
-	public function compileBools(Builder $builder)
-	{
-		$compiled = array();
-
-		foreach ($builder->bool as $bool) {
-			$compiled[] = $this->compileBool($bool);
-		}
-
-		return $compiled;
-	}
-
-	/**
 	 * Compile a bool statement.
 	 *
 	 * @param  array $bool
@@ -127,23 +90,6 @@ class Grammar extends BaseGrammar {
 		$compiled = $this->compileClause($bool['value'], $subClauses);
 
 		return $this->compile('bool', $compiled);
-	}
-
-	/**
-	 * Compile boosting statements.
-	 *
-	 * @param  Builder $builder
-	 * @return array
-	 */
-	public function compileBoostings(Builder $builder)
-	{
-		$compiled = array();
-
-		foreach ($builder->boosting as $boosting) {
-			$compiled[] = $this->compileBoosting($boosting);
-		}
-
-		return $compiled;
 	}
 
 	/**
@@ -162,23 +108,6 @@ class Grammar extends BaseGrammar {
 	}
 
 	/**
-	 * Compile common statements.
-	 *
-	 * @param  Builder $builder
-	 * @return array
-	 */
-	public function compileCommons(Builder $builder)
-	{
-		$compiled = array();
-
-		foreach ($builder->common as $common) {
-			$compiled[] = $this->compileCommon($common);
-		}
-
-		return $compiled;
-	}
-
-	/**
 	 * Compile a common statement.
 	 *
 	 * @param  array $common
@@ -189,6 +118,19 @@ class Grammar extends BaseGrammar {
 		$subCompiled = $this->compile($common['field'], $this->compileClause($common['value'], ['minimumShouldMatch']));
 
 		return $this->compile('common', $subCompiled);
+	}
+
+	/**
+	 * Compile a term statement.
+	 *
+	 * @param  array $term
+	 * @return array
+	 */
+	public function compileTerm($term)
+	{
+		$subCompiled = $this->compile($term['field'], $this->compileClause($term['value']));
+
+		return $this->compile('term', $subCompiled);
 	}
 
 	/**
@@ -210,6 +152,46 @@ class Grammar extends BaseGrammar {
 
 		if (empty($compiled)) {
 			return null;
+		}
+
+		return $compiled;
+	}
+
+	/**
+	 * Compile a set of subqueries statements.
+	 *
+	 * @param  array  $queries
+	 * @return array
+	 */
+	protected function compileSubqueries(Builder $builder, array $queries)
+	{
+		$compiled = array();
+
+		foreach ($queries as $query) {
+			$compiled = array_merge_recursive($compiled, $this->compileSubquery($builder, $query));
+		}
+
+		return $compiled;
+	}
+
+	/**
+	 * Compile a single subquery statements.
+	 *
+	 * @param  string $name
+	 * @return array
+	 */
+	protected function compileSubquery($builder, $name)
+	{
+		$compiled  = array();
+		$container = Str::camel($name);
+
+		if (isset($builder->$container)) {
+
+			$method = 'compile'.ucfirst($container);
+
+			foreach ($builder->$container as $query) {
+				$compiled[] = $this->$method($query);
+			}
 		}
 
 		return $compiled;

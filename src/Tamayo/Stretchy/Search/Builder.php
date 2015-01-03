@@ -5,12 +5,7 @@ use Illuminate\Support\Str;
 use Tamayo\Stretchy\Connection;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Processor;
-use Tamayo\Stretchy\Search\Clauses\Bool;
-use Tamayo\Stretchy\Search\Clauses\DisMax;
 use Tamayo\Stretchy\Search\Clauses\Clause;
-use Tamayo\Stretchy\Search\Clauses\Common;
-use Tamayo\Stretchy\Search\Clauses\Boosting;
-use Tamayo\Stretchy\Search\Clauses\ConstantScore;
 use Tamayo\Stretchy\Builder as BaseBuilder;
 
 class Builder extends BaseBuilder {
@@ -210,7 +205,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function bool(Closure $callback)
 	{
-		$bool = new Bool($this);
+		$bool = new \Tamayo\Stretchy\Search\Clauses\Bool($this);
 
 		$callback($bool);
 
@@ -227,7 +222,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function boosting(Closure $callback)
 	{
-		$boosting = new Boosting($this);
+		$boosting = new \Tamayo\Stretchy\Search\Clauses\Boosting($this);
 
 		$callback($boosting);
 
@@ -246,7 +241,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function common($field, $value, $parameters = null)
 	{
-		$common = new Common($this);
+		$common = new \Tamayo\Stretchy\Search\Clauses\Common($this);
 
 		$this->addClauseParameters($common, $parameters);
 
@@ -265,7 +260,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function constantScore(Closure $callback)
 	{
-		$constantScore = new ConstantScore($this);
+		$constantScore = new \Tamayo\Stretchy\Search\Clauses\ConstantScore($this);
 
 		$callback($constantScore);
 
@@ -274,13 +269,56 @@ class Builder extends BaseBuilder {
 		return $this;
 	}
 
+	/**
+	 * Elastic dis max query.
+	 *
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
 	public function disMax(Closure $callback)
 	{
-		$disMax = new DisMax($this);
+		$disMax = new \Tamayo\Stretchy\Search\Clauses\DisMax($this);
 
 		$callback($disMax);
 
 		$this->setStatement('dis_max', null, $disMax);
+
+		return $this;
+	}
+
+	/**
+	 * Elastic filtered query.
+	 *
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function filtered(Closure $callback)
+	{
+		$filtered = new \Tamayo\Stretchy\Search\Clauses\Filtered($this);
+
+		$callback($filtered);
+
+		$this->setStatement('filtered', null, $filtered);
+
+		return $this;
+	}
+
+	/**
+	 * Elastic range query.
+	 *
+	 * @param  string $field
+	 * @param  Closure|array $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function range($field, $parameters)
+	{
+		$range = new Clause($this);
+
+		$range->setConstraints(['gte', 'gt', 'lte', 'lt', 'boost', 'time_zone']);
+
+		$this->addClauseParameters($range, $parameters);
+
+		$this->setStatement('range', $field, $range);
 
 		return $this;
 	}

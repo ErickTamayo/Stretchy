@@ -286,6 +286,113 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"dis_max":{"queries":[{"term":{"age":{"value":34}}},{"term":{"age":{"value":35}}}],"tie_breaker":0.7,"boost":1.2}}}}', $json);
 	}
 
+	public function testNestedDisMax()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->disMax(function($disMax)
+				{
+					$disMax->tieBreaker(0.7);
+					$disMax->boost(1.2);
+
+					$disMax->queries(function($queries)
+					{
+						$queries->term('age', 34);
+						$queries->term('age', 35);
+					});
+				});
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"dis_max":{"queries":[{"term":{"age":{"value":34}}},{"term":{"age":{"value":35}}}],"tie_breaker":0.7,"boost":1.2}}]}}}}', $json);
+	}
+
+	public function testSingleFiltered()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->filtered(function($filtered)
+		{
+			$filtered->query(function($query)
+			{
+				$query->match('bar', 'baz');
+			});
+
+			$filtered->filter(function($filter)
+			{
+				$filter->range('created', ['gte' => 'now - 1d / d']);
+			});
+
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"filtered":{"filter":[{"range":{"created":{"gte":"now - 1d \/ d"}}}],"query":[{"match":{"bar":{"query":"baz","type":"boolean"}}}]}}}}', $json);
+	}
+
+	public function testNestedFiltered()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->filtered(function($filtered)
+				{
+					$filtered->query(function($query)
+					{
+						$query->match('bar', 'baz');
+					});
+
+					$filtered->filter(function($filter)
+					{
+						$filter->range('created', ['gte' => 'now - 1d / d']);
+					});
+
+				});
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"filtered":{"filter":[{"range":{"created":{"gte":"now - 1d \/ d"}}}],"query":[{"match":{"bar":{"query":"baz","type":"boolean"}}}]}}]}}}}', $json);
+	}
+
+	public function testSingleRange()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->range('created', ['gte' => 'now - 1d / d']);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"range":{"created":{"gte":"now - 1d \/ d"}}}}}', $json);
+	}
+
+	public function testNestedRange()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->range('created', ['gte' => 'now - 1d / d']);
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"range":{"created":{"gte":"now - 1d \/ d"}}}]}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

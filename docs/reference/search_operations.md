@@ -177,6 +177,48 @@ Stretchy::search('foo')
 	->get();
 ```
 
+# Filtered query
+
+For **filtered** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-filtered-query.html)
+
+```php
+Stretchy::search('foo')
+	->filtered(function($filtered)
+	{
+		$filtered->query(function($query)
+		{
+			$query->match('bar', 'baz');
+		});
+
+		$filtered->filter(function($filter)
+		{
+			$filter->range('created', ['gte' => 'now - 1d / d']);
+		});
+
+	})
+	->get();
+```
+
+# Range query
+
+For **range** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-range-query.html)
+
+```php
+Stretchy::search('foo')->range('created', ['gte' => 'now - 1d / d'])->get();
+```
+
+or
+
+```php
+Stretchy::search('foo')
+	->range('created', function($range)
+	{
+		$range->gte('now - 1d/ d');
+	})
+	->get();
+```
+
+
 # Term query
 
 For **term** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-term-query.html)

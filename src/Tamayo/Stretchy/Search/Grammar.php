@@ -27,7 +27,7 @@ class Grammar extends BaseGrammar {
 		else
 		{
 			$body = $this->compileSubqueries($builder, [
-				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score', 'dis_max'
+				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score', 'dis_max', 'filtered', 'range'
 			]);
 		}
 
@@ -118,6 +118,7 @@ class Grammar extends BaseGrammar {
 
 	/**
 	 * Compile a constant score statement.
+	 *
 	 * @param  array $constantScore
 	 * @return array
 	 */
@@ -130,6 +131,7 @@ class Grammar extends BaseGrammar {
 
 	/**
 	 * Compile a dis max statement.
+	 *
 	 * @param  array $disMax
 	 * @return array
 	 */
@@ -141,6 +143,32 @@ class Grammar extends BaseGrammar {
 	}
 
 	/**
+	 * Compile a filtered statement.
+	 *
+	 * @param  array $filtered
+	 * @return array
+	 */
+	protected function compileFiltered($filtered)
+	{
+		$compiled = $this->compileClause($filtered['value'], ['query', 'filter']);
+
+		return $this->compile('filtered', $compiled);
+	}
+
+	/**
+	 * Compile a range statement.
+	 *
+	 * @param  array $term
+	 * @return array
+	 */
+	protected function compileRange($range)
+	{
+		$compiled = $this->compile($range['field'], $this->compileClause($range['value']));
+
+		return $this->compile('range', $compiled);
+	}
+
+	/**
 	 * Compile a term statement.
 	 *
 	 * @param  array $term
@@ -148,9 +176,9 @@ class Grammar extends BaseGrammar {
 	 */
 	protected function compileTerm($term)
 	{
-		$subCompiled = $this->compile($term['field'], $this->compileClause($term['value']));
+		$compiled = $this->compile($term['field'], $this->compileClause($term['value']));
 
-		return $this->compile('term', $subCompiled);
+		return $this->compile('term', $compiled);
 	}
 
 	/**

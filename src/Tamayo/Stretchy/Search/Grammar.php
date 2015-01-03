@@ -27,7 +27,7 @@ class Grammar extends BaseGrammar {
 		else
 		{
 			$body = $this->compileSubqueries($builder, [
-				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score', 'dis_max', 'filtered', 'range'
+				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score', 'dis_max', 'filtered', 'range', 'fuzzy_like_this', 'fuzzy_like_this_field', 'fuzzy'
 			]);
 		}
 
@@ -48,22 +48,7 @@ class Grammar extends BaseGrammar {
 	{
 		$compiled = array();
 
-		$method = 'compile'.ucfirst($statement['type']);
-
-		return $this->compile('query', $this->$method($statement));
-	}
-
-	/**
-	 * Compile a match statement.
-	 *
-	 * @param  array $match
-	 * @return array
-	 */
-	protected function compileMatch($match)
-	{
-		$subCompiled = $this->compile($match['field'], $this->compileClause($match['value']));
-
-		return $this->compile('match', $subCompiled);
+		return $this->compile('query', $this->callCompileMethod($statement['type'], $statement));
 	}
 
 	/**
@@ -156,29 +141,29 @@ class Grammar extends BaseGrammar {
 	}
 
 	/**
-	 * Compile a range statement.
+	 * Compile a fuzzy like this statement.
 	 *
-	 * @param  array $term
+	 * @param  array $fuzzyLikeThis
 	 * @return array
 	 */
-	protected function compileRange($range)
+	protected function compileFuzzyLikeThis($fuzzyLikeThis)
 	{
-		$compiled = $this->compile($range['field'], $this->compileClause($range['value']));
+		$compiled = $this->compileClause($fuzzyLikeThis['value']);
 
-		return $this->compile('range', $compiled);
+		return $this->compile('fuzzy_like_this', $compiled);
 	}
 
 	/**
-	 * Compile a term statement.
+	 * Compile a default statement.
 	 *
-	 * @param  array $term
+	 * @param  array $statement
 	 * @return array
 	 */
-	protected function compileTerm($term)
+	public function compileDefaultStatement($type, $statement)
 	{
-		$compiled = $this->compile($term['field'], $this->compileClause($term['value']));
+		$compiled = $this->compile($statement['field'], $this->compileClause($statement['value']));
 
-		return $this->compile('term', $compiled);
+		return $this->compile($type, $compiled);
 	}
 
 	/**
@@ -234,14 +219,41 @@ class Grammar extends BaseGrammar {
 		$container = Str::camel($name);
 
 		if (isset($builder->$container)) {
-
-			$method = 'compile'.ucfirst($container);
-
-			foreach ($builder->$container as $query) {
-				$compiled[] = $this->$method($query);
+			foreach ($builder->$container as $statement) {
+				$compiled[] = $this->callCompileMethod($container, $statement);
 			}
 		}
 
 		return $compiled;
+	}
+
+	/**
+	 * Check if method exists in class.
+	 *
+	 * @param  string $name
+	 * @return bool
+	 */
+	protected function methodExists($name)
+	{
+		return method_exists($this, $name);
+	}
+
+	/**
+	 * Call the compile method of the statement.
+	 *
+	 * @param  string $type
+	 * @param  mixed  $statement
+	 * @return array
+	 */
+	protected function callCompileMethod($type, $statement)
+	{
+		$method = 'compile'.ucfirst($type);
+
+		if ($this->methodExists($method)) {
+			return $this->$method($statement);
+		}
+
+		//If method does not exists, asume as default compilation
+		return $this->compileDefaultStatement(Str::snake($type), $statement);
 	}
 }

@@ -393,6 +393,90 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"range":{"created":{"gte":"now - 1d \/ d"}}}]}}}}', $json);
 	}
 
+	public function testSingleFuzzyLikeThis()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->fuzzyLikeThis(['bar', 'baz'], 'text like this one', ['fuzziness' => 1.5]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"fuzzy_like_this":{"fuzziness":1.5,"like_text":"text like this one","fields":["bar","baz"]}}}}', $json);
+	}
+
+	public function testNestedFuzzyLikeThis()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->fuzzyLikeThis(['bar', 'baz'], 'text like this one', ['fuzziness' => 1.5]);
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"fuzzy_like_this":{"fuzziness":1.5,"like_text":"text like this one","fields":["bar","baz"]}}]}}}}', $json);
+	}
+
+	public function testSingleFuzzyLikeThisField()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->fuzzyLikeThisField('baz', 'text like this one', ['fuzziness' => 1.5]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"fuzzy_like_this_field":{"baz":{"fuzziness":1.5,"like_text":"text like this one"}}}}}', $json);
+	}
+
+	public function testNestedFuzzyLikeThisField()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->fuzzyLikeThisField('baz', 'text like this one', ['fuzziness' => 1.5]);
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"fuzzy_like_this_field":{"baz":{"fuzziness":1.5,"like_text":"text like this one"}}}]}}}}', $json);
+	}
+
+	public function testSingleFuzzy()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->fuzzy('price', 12, ['fuzziness' => 2]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"fuzzy":{"price":{"fuzziness":2,"value":12}}}}}', $json);
+	}
+
+	public function testNestedFuzzy()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->fuzzy('price', 12, ['fuzziness' => 2]);
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"fuzzy":{"price":{"fuzziness":2,"value":12}}}]}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

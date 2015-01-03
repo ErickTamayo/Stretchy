@@ -199,6 +199,69 @@ Stretchy::search('foo')
 	->get();
 ```
 
+# Fuzzy like this query
+
+For **fuzzy like this** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-flt-query.html)
+
+```php
+Stretchy::search('foo')->fuzzyLikeThis(['bar', 'baz'], 'text like this one', ['fuzziness' => 1.5])->get();
+```
+
+or
+
+```php
+Stretchy::search('foo')
+	->fuzzyLikeThis(['bar', 'baz'], 'text like this one', function($fuzzyLikeThis)
+	{
+		$fuzzyLikeThis->fuzziness(1.5);
+	})
+	->get();
+```
+
+# Fuzzy like this field query
+
+For **fuzzy like this** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-flt-field-query.html)
+
+```php
+Stretchy::search('foo')->fuzzyLikeThisField('baz', 'text like this one', ['fuzziness' => 1.5])->get();
+```
+
+or
+
+```php
+Stretchy::search('foo')
+	->fuzzyLikeThisField('baz', 'text like this one', function($fuzzyLikeThisField)
+	{
+		$fuzzyLikeThisField->fuzziness(1.5);
+	})
+	->get();
+```
+
+also, as the same as elasticsearch, you can use the alias **fltField**:
+
+```php
+Stretchy::search('foo')->fltField('baz', 'text like this one', ['fuzziness' => 1.5])->get();
+```
+
+# Fuzzy query
+
+For **fuzzy** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-fuzzy-query.html)
+
+```php
+Stretchy::search('foo')->fuzzy('price', 12, ['fuzziness' => 2])->get();
+```
+
+or
+
+```php
+Stretchy::search('foo')
+	->fuzzy('price', 12, function($fuzzy)
+	{
+		$fuzzy->fuzziness(2);
+	})
+	->get();
+```
+
 # Range query
 
 For **range** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-range-query.html)

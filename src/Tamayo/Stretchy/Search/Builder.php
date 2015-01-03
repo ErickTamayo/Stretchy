@@ -61,9 +61,59 @@ class Builder extends BaseBuilder {
 
 	/**
 	 * Common constraints of the query.
+	 *
 	 * @var array
 	 */
 	public $common;
+
+	/**
+	 * Constant score constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $constantScore;
+
+	/**
+	 * Dis max constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $disMax;
+
+	/**
+	 * Filtered constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $filtered;
+
+	/**
+	 * Fuzzy like this constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $fuzzyLikeThis;
+
+	/**
+	 * Fuzzy like this constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $fuzzyLikeThisField;
+
+	/**
+	 * Fuzzy constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $fuzzy;
+
+	/**
+	 * Range constraints of the query.
+	 *
+	 * @var array
+	 */
+	public $range;
 
 	/**
 	 * Term constraints of the query.
@@ -299,6 +349,82 @@ class Builder extends BaseBuilder {
 		$callback($filtered);
 
 		$this->setStatement('filtered', null, $filtered);
+
+		return $this;
+	}
+
+	public function fuzzyLikeThis(array $fields, $value, $parameters = null)
+	{
+		$fuzzyLikeThis = new Clause($this);
+
+		$fuzzyLikeThis->setConstraints(['fields', 'like_text', 'ignore_tf', 'max_query_terms', 'fuzziness', 'prefix_length', 'boost', 'analyzer']);
+
+		$this->addClauseParameters($fuzzyLikeThis, $parameters);
+
+		$fuzzyLikeThis->likeText($value);
+
+		$fuzzyLikeThis->fields($fields);
+
+		$this->setStatement('fuzzy_like_this', null, $fuzzyLikeThis);
+
+		return $this;
+	}
+
+	/**
+	 * Fuzzy like this field query.
+	 *
+	 * @param  string 		 $field
+	 * @param  mixed 		 $value
+	 * @param  Closure|array $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function fuzzyLikeThisField($field, $value, $parameters = null)
+	{
+		$fuzzyLikeThisField = new Clause($this);
+
+		$fuzzyLikeThisField->setConstraints(['like_text', 'ignore_tf', 'max_query_terms', 'fuzziness', 'prefix_length', 'boost', 'analyzer']);
+
+		$this->addClauseParameters($fuzzyLikeThisField, $parameters);
+
+		$fuzzyLikeThisField->likeText($value);
+
+		$this->setStatement('fuzzy_like_this_field', $field, $fuzzyLikeThisField);
+
+		return $this;
+	}
+
+	/**
+	 * Fuzzy like this field query alias.
+	 *
+	 * @param  string 		 $field
+	 * @param  mixed 		 $value
+	 * @param  Closure|array $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function fltField($field, $value, $parameters = null)
+	{
+		return $this->fuzzyLikeThisField($field, $value, $parameters);
+	}
+
+	/**
+	 * Elastic fuzzy query.
+	 *
+	 * @param  string 	 	 $field
+	 * @param  mixed 		 $value
+	 * @param  Closure|array $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function fuzzy($field, $value, $parameters = null)
+	{
+		$fuzzy = new Clause($this);
+
+		$fuzzy->setConstraints(['value', 'boost', 'fuzziness', 'prefix_length', 'max_expansions']);
+
+		$this->addClauseParameters($fuzzy, $parameters);
+
+		$fuzzy->value($value);
+
+		$this->setStatement('fuzzy', $field, $fuzzy);
 
 		return $this;
 	}

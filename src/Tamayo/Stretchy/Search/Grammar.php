@@ -26,9 +26,7 @@ class Grammar extends BaseGrammar {
 		}
 		else
 		{
-			$body = $this->compileSubqueries($builder, [
-				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score', 'dis_max', 'filtered', 'range', 'fuzzy_like_this', 'fuzzy_like_this_field', 'fuzzy', 'geo_shape'
-			]);
+			$body = $this->compileSubqueries($builder);
 		}
 
 		if ($builder->isSubquery()) {
@@ -161,7 +159,12 @@ class Grammar extends BaseGrammar {
 	 */
 	public function compileDefaultStatement($type, $statement)
 	{
-		$compiled = $this->compile($statement['field'], $this->compileClause($statement['value']));
+		if (! isset($statement['field'])) {
+			$compiled = $this->compileClause($statement['value']);
+		}
+		else {
+			$compiled = $this->compile($statement['field'], $this->compileClause($statement['value']));
+		}
 
 		return $this->compile($type, $compiled);
 	}
@@ -190,12 +193,16 @@ class Grammar extends BaseGrammar {
 	 * @param  array  $queries
 	 * @return array
 	 */
-	protected function compileSubqueries(Builder $builder, array $queries)
+	protected function compileSubqueries(Builder $builder)
 	{
 		$compiled = array();
 
-		foreach ($queries as $query) {
+		foreach ($builder->getStatements() as $query) {
 			$compiled = array_merge_recursive($compiled, $this->compileSubquery($builder, $query));
+		}
+
+		if(count($compiled) == 1){
+			$compiled = array_shift($compiled);
 		}
 
 		return $compiled;

@@ -25,6 +25,13 @@ class Builder extends BaseBuilder {
 	protected $isSubquery = false;
 
 	/**
+	 * Statements set by the builder.
+	 *
+	 * @var array
+	 */
+	protected $statements = [];
+
+	/**
 	 * Single statement constraint.
 	 *
 	 * @var array
@@ -464,6 +471,23 @@ class Builder extends BaseBuilder {
 	}
 
 	/**
+	 * Elastic has child query.
+	 *
+	 * @param  Closure $query
+	 * @return boolean
+	 */
+	public function hasChild(Closure $callback)
+	{
+		$hasChild = new \Tamayo\Stretchy\Search\Clauses\HasChild($this);
+
+		$callback($hasChild);
+
+		$this->setStatement('has_child', null, $hasChild);
+
+		return $this;
+	}
+
+	/**
 	 * Elastic range query.
 	 *
 	 * @param  string $field
@@ -561,15 +585,27 @@ class Builder extends BaseBuilder {
 	{
 		if (! $this->isSubquery() && $single) {
 			$this->setSingleStatement($type, $field, $value);
-		}
-		else
-		{
+		} else {
 			$container = Str::camel($type);
 
 			$this->$container = isset($this->$container) ? $this->$container : array();
 
 			$this->$container = array_merge($this->$container, [['field' => $field, 'value' => $value]]);
+
+			if (! in_array($type, $this->statements)) {
+				$this->statements[] = $type;
+			}
 		}
+	}
+
+	/**
+	 * Get the statements set by the builder.
+	 *
+	 * @return array
+	 */
+	public function getStatements()
+	{
+		return $this->statements;
 	}
 
 	/**

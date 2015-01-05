@@ -217,6 +217,45 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"common":{"foo":{"minimum_should_match":{"low_freq":2,"high_freq":3},"cutoff_frequency":0.001,"query":"bar"}}}]}}}}', $json);
 	}
 
+	public function testSingleGeoShape()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->geoShape('location', [[13, 53],[14, 52]]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"geo_shape":{"location":{"shape":{"coordinates":[[13,53],[14,52]],"type":"envelope"}}}}}}', $json);
+	}
+
+	public function testSingleGeoShapeIndexedShape()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->geoShape('location', [], 'indexed_shape', ['id' => 'DEU', 'type'=> 'countries', 'index'=> 'shapes', 'path'=> 'location']);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"geo_shape":{"location":{"indexed_shape":{"id":"DEU","type":"countries","index":"shapes","path":"location"}}}}}}', $json);
+	}
+
+	public function testNestedGeoShape()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->geoShape('location', [[13, 53],[14, 52]]);
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"geo_shape":{"location":{"shape":{"coordinates":[[13,53],[14,52]],"type":"envelope"}}}}]}}}}', $json);
+	}
+
 	public function testSingleTerm()
 	{
 		$builder = $this->getBuilder();

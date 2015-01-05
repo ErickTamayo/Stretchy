@@ -22,6 +22,20 @@ class Clause
 	protected $constraints = [];
 
 	/**
+	 * Available sub clauses in the clause.
+	 *
+	 * @var array
+	 */
+	protected $subclauses = [];
+
+	/**
+	 * Available sub queries in the clause.
+	 *
+	 * @var array
+	 */
+	protected $subqueries = [];
+
+	/**
 	 * The current builder instance.
 	 *
 	 * @var \Tamayo\Stretchy\Search\Builder
@@ -45,19 +59,45 @@ class Clause
 	 * @param string $constraint
 	 * @param mixed $value
 	 */
-	public function __call($constraint, $arguments)
+	public function __call($method, $arguments)
 	{
-		$constraint = Str::snake($constraint);
+		$constraint = Str::snake($method);
+		$value      = $arguments[0];
+		$type 		= $this->constraintType($constraint);
 
-		if(! in_array($constraint, $this->constraints)) {
+		if (!isset($type)) {
 			throw new \InvalidArgumentException("Unavailable constraint: [{$constraint}]", 1);
 		}
 
-		$value = $arguments[0];
-
-		$this->container[$constraint] = $value;
+		$this->setConstraint($constraint, $value, $type);
 
 		return $this;
+	}
+
+	/**
+	 * Set a constraint.
+	 *
+	 * @param mixed $value
+	 * @param string $type
+	 * @return void
+	 */
+	protected function setConstraint($field, $value, $type = 'constraint')
+	{
+		switch ($type) {
+			case 'subclause':
+				$value = $this->createSubclause($this->subclauses[$field], $value);
+				$this->container[] = array_merge(compact('field', 'type'), ['value' => $value]);
+				break;
+
+			case 'subquery':
+				$value = $this->createSubquery($value);
+				$this->container[] = array_merge(compact('field', 'type'), ['value' => $value]);
+				break;
+
+			default:
+				$this->container[] = compact('field', 'value', 'type');
+				break;
+		}
 	}
 
 	/**
@@ -84,6 +124,7 @@ class Clause
 	 * Add raw constraints.
 	 *
 	 * @param array $constraints
+	 * @return void
 	 */
 	public function addRawConstraints(array $constraints)
 	{
@@ -91,9 +132,9 @@ class Clause
 			if(! $this->isValidConstraint($key)) {
 				throw new \InvalidArgumentException("Unavailable constraint: [{$key}]", 1);
 			}
-		}
 
-		$this->container = array_merge($this->container, $constraints);
+			$this->setConstraint($key, $value);
+		}
 	}
 
 	/**
@@ -108,13 +149,13 @@ class Clause
 	}
 
 	/**
-	 * Add a sub clause to a container an executes its callback.
+	 * Create a sub clause and executes its callback.
 	 *
 	 * @param array  &$container
 	 * @param Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
+	 * @return \Tamayo\Stretchy\Search\Clauses\Clause
 	 */
-	public function addSubclause(&$container, array $constraints, Closure $callback)
+	public function createSubclause(array $constraints, Closure $callback)
 	{
 		$clause = new static($this->builder);
 
@@ -122,18 +163,16 @@ class Clause
 
 		$callback($clause);
 
-		$container = $clause;
-
-		return $this;
+		return $clause;
 	}
 
 	/**
-	 * Add a sub query to a containter and execute its callback.
+	 * Create a sub query and execute its callback.
 	 *
 	 * @param array  &$container
 	 * @param Closure $callback
 	 */
-	public function addSubquery(&$container, Closure $callback)
+	public function createSubquery(Closure $callback)
 	{
 		$query = $this->builder->newInstance()->setSubquery();
 
@@ -141,7 +180,7 @@ class Clause
 
 		$container = $query;
 
-		return $this;
+		return $query;
 	}
 
 	/**
@@ -151,6 +190,66 @@ class Clause
 	 */
 	public function toArray()
 	{
-		return $this->container;
+		$array = array();
+
+		foreach ($this->getAffectedConstraints() as $constraint) {
+			if ($constraint['type'] == 'constraint') {
+				$array = array_merge($array, [$constraint['field'] => $constraint['value']]);
+			}
+			else {
+				$array = array_merge([$constraint['field'] => $constraint['value']->toArray()], $array);
+			}
+		}
+
+		return $array;
+	}
+
+	/**
+	 * Get the type of the constraint.
+	 *
+	 * @param  string $constraint
+	 * @return string|null
+	 */
+	protected function constraintType($constraint)
+	{
+		if($this->isConstraint($constraint)) {
+			return 'constraint';
+		} elseif ($this->isSubclause($constraint)) {
+			return 'subclause';
+		} elseif ($this->isSubquery($constraint)) {
+			return 'subquery';
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get the available constraints.
+	 *
+	 * @return array
+	 */
+	protected function isConstraint($constraint)
+	{
+		return in_array($constraint, $this->constraints);
+	}
+
+	/**
+	 * Get the available sub clauses.
+	 *
+	 * @return array
+	 */
+	protected function isSubclause($constraint)
+	{
+		return in_array($constraint, array_keys($this->subclauses));
+	}
+
+	/**
+	 * Get the available sub queries.
+	 *
+	 * @return array
+	 */
+	protected function isSubquery($constraint)
+	{
+		return in_array($constraint, $this->subqueries);
 	}
 }

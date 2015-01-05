@@ -430,6 +430,40 @@ class Builder extends BaseBuilder {
 	}
 
 	/**
+	 * Elastic geo shape query.
+	 *
+	 * @param  string 		 $field
+	 * @param  array  		 $coordinates
+	 * @param  Closure|array $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function geoShape($field, array $coordinates, $shape = 'shape', $parameters = null)
+	{
+		$geoShape = new \Tamayo\Stretchy\Search\Clauses\GeoShape($this);
+
+		if ($shape == 'shape') {
+			$geoShape->shape(function($shape) use ($coordinates, $parameters)
+			{
+				$shape->coordinates($coordinates);
+				$shape->type('envelope');
+
+				$this->addClauseParameters($shape, $parameters);
+			});
+		} elseif ($shape == 'indexed_shape') {
+			$geoShape->indexedShape(function($shape) use ($parameters)
+			{
+				$this->addClauseParameters($shape, $parameters);
+			});
+		} else {
+			throw new \InvalidArgumentException("Invalid shape: [{$shape}]", 1);
+		}
+
+		$this->setStatement('geo_shape', $field, $geoShape);
+
+		return $this;
+	}
+
+	/**
 	 * Elastic range query.
 	 *
 	 * @param  string $field

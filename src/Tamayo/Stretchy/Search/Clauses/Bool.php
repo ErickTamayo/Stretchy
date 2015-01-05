@@ -1,8 +1,5 @@
 <?php namespace Tamayo\Stretchy\Search\Clauses;
 
-use Closure;
-use Tamayo\Stretchy\Search\Clauses\Clause;
-
 class Bool extends Clause
 {
 	/**
@@ -13,57 +10,9 @@ class Bool extends Clause
 	protected $constraints = ['minimum_should_match', 'boost'];
 
 	/**
-	 * Must not subquery.
+	 * Available sub queries in the clause.
 	 *
-	 * @var \Tamayo\Stretchy\Search\Builder
+	 * @var array
 	 */
-	public $mustNot;
-
-	/**
-	 * Must subquery.
-	 *
-	 * @var \Tamayo\Stretchy\Search\Builder
-	 */
-	public $must;
-
-	/**
-	 * Should subquery.
-	 *
-	 * @var \Tamayo\Stretchy\Search\Builder
-	 */
-	public $should;
-
-	/**
-	 * Must Clause.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Bool
-	 */
-	public function must(Closure $callback)
-	{
-		return $this->addSubquery($this->must, $callback);
-	}
-
-	/**
-	 * Must Clause.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function mustNot(Closure $callback)
-	{
-		return $this->addSubquery($this->mustNot, $callback);
-	}
-
-	/**
-	 * Must Clause.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function should(Closure $callback)
-	{
-		return $this->addSubquery($this->should, $callback);
-	}
-
+	protected $subqueries = ['must', 'must_not', 'should'];
 }

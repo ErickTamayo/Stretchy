@@ -77,6 +77,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 			$query->should(function($should)
 			{
 				$should->match('foo', 'bah');
+				$should->match('foo', 'qux');
 			});
 
 			$query->minimumShouldMatch(1);
@@ -84,7 +85,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"should":[{"match":{"foo":{"query":"bah","type":"boolean"}}}],"must_not":[{"match":{"foo":{"query":"baz","type":"boolean"}}}],"must":[{"match":{"foo":{"query":"bar","type":"boolean"}}}],"minimum_should_match":1}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"should":[{"match":{"foo":{"query":"bah","type":"boolean"}}},{"match":{"foo":{"query":"qux","type":"boolean"}}}],"must_not":{"match":{"foo":{"query":"baz","type":"boolean"}}},"must":{"match":{"foo":{"query":"bar","type":"boolean"}}},"minimum_should_match":1}}}}', $json);
 	}
 
 	public function testNestedBool()
@@ -113,7 +114,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"match":{"foo":{"query":"bar","type":"boolean"}}},{"bool":{"must":[{"match":{"foo":{"query":"baz","type":"boolean"}}}],"boost":1}}],"minimum_should_match":1}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"match":{"foo":{"query":"bar","type":"boolean"}}},{"bool":{"must":{"match":{"foo":{"query":"baz","type":"boolean"}}},"boost":1}}],"minimum_should_match":1}}}}', $json);
 	}
 
 	public function testSingleBoosting()
@@ -137,7 +138,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"boosting":{"negative":[{"match":{"bar":{"query":"bah","type":"boolean"}}}],"positive":[{"match":{"bar":{"query":"baz","type":"boolean"}}}],"negative_boost":0.2}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"boosting":{"negative":{"match":{"bar":{"query":"bah","type":"boolean"}}},"positive":{"match":{"bar":{"query":"baz","type":"boolean"}}},"negative_boost":0.2}}}}', $json);
 	}
 
 	public function testNestedBoosting()
@@ -168,7 +169,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"boosting":{"negative":[{"match":{"bar":{"query":"bah","type":"boolean"}}}],"positive":[{"match":{"bar":{"query":"baz","type":"boolean"}}}],"negative_boost":0.2}}]}}}}',$json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"boosting":{"negative":{"match":{"bar":{"query":"bah","type":"boolean"}}},"positive":{"match":{"bar":{"query":"baz","type":"boolean"}}},"negative_boost":0.2}}}}}}',$json);
 	}
 
 	public function testSingleCommonTerms()
@@ -214,7 +215,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"common":{"foo":{"minimum_should_match":{"low_freq":2,"high_freq":3},"cutoff_frequency":0.001,"query":"bar"}}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"common":{"foo":{"minimum_should_match":{"low_freq":2,"high_freq":3},"cutoff_frequency":0.001,"query":"bar"}}}}}}}', $json);
 	}
 
 	public function testSingleGeoShape()
@@ -253,7 +254,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"geo_shape":{"location":{"shape":{"coordinates":[[13,53],[14,52]],"type":"envelope"}}}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"geo_shape":{"location":{"shape":{"coordinates":[[13,53],[14,52]],"type":"envelope"}}}}}}}}', $json);
 	}
 
 	public function testSingleTerm()
@@ -284,7 +285,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"term":{"foo":{"boost":2,"value":"bar"}}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"term":{"foo":{"boost":2,"value":"bar"}}}}}}}', $json);
 	}
 
 	public function testConstantScore()
@@ -301,7 +302,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"constant_score":{"filter":[{"term":{"foo":{"value":"bar"}}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"constant_score":{"filter":{"term":{"foo":{"value":"bar"}}}}}}}', $json);
 	}
 
 	public function testDisMax()
@@ -349,7 +350,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"dis_max":{"queries":[{"term":{"age":{"value":34}}},{"term":{"age":{"value":35}}}],"tie_breaker":0.7,"boost":1.2}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"dis_max":{"queries":[{"term":{"age":{"value":34}}},{"term":{"age":{"value":35}}}],"tie_breaker":0.7,"boost":1.2}}}}}}', $json);
 	}
 
 	public function testSingleFiltered()
@@ -372,7 +373,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"filtered":{"filter":[{"range":{"created":{"gte":"now - 1d \/ d"}}}],"query":[{"match":{"bar":{"query":"baz","type":"boolean"}}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"filtered":{"filter":{"range":{"created":{"gte":"now - 1d \/ d"}}},"query":{"match":{"bar":{"query":"baz","type":"boolean"}}}}}}}', $json);
 	}
 
 	public function testNestedFiltered()
@@ -401,7 +402,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"filtered":{"filter":[{"range":{"created":{"gte":"now - 1d \/ d"}}}],"query":[{"match":{"bar":{"query":"baz","type":"boolean"}}}]}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"filtered":{"filter":{"range":{"created":{"gte":"now - 1d \/ d"}}},"query":{"match":{"bar":{"query":"baz","type":"boolean"}}}}}}}}}', $json);
 	}
 
 	public function testSingleRange()
@@ -429,7 +430,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"range":{"created":{"gte":"now - 1d \/ d"}}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"range":{"created":{"gte":"now - 1d \/ d"}}}}}}}', $json);
 	}
 
 	public function testSingleFuzzyLikeThis()
@@ -457,7 +458,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"fuzzy_like_this":{"fuzziness":1.5,"like_text":"text like this one","fields":["bar","baz"]}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"fuzzy_like_this":{"fuzziness":1.5,"like_text":"text like this one","fields":["bar","baz"]}}}}}}', $json);
 	}
 
 	public function testSingleFuzzyLikeThisField()
@@ -485,7 +486,7 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"fuzzy_like_this_field":{"baz":{"fuzziness":1.5,"like_text":"text like this one"}}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"fuzzy_like_this_field":{"baz":{"fuzziness":1.5,"like_text":"text like this one"}}}}}}}', $json);
 	}
 
 	public function testSingleFuzzy()
@@ -513,7 +514,59 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 
 		$json = $builder->toJson();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"fuzzy":{"price":{"fuzziness":2,"value":12}}}]}}}}', $json);
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"fuzzy":{"price":{"fuzziness":2,"value":12}}}}}}}', $json);
+	}
+
+	public function testHasChild()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->hasChild(function($hasChild)
+		{
+			$hasChild->type('blog_tag');
+			$hasChild->scoreMode('sum');
+
+			$hasChild->minChildren(2);
+			$hasChild->maxChildren(10);
+
+			$hasChild->query(function($query)
+			{
+				$query->term('bar', 'baz');
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"has_child":{"query":{"term":{"bar":{"value":"baz"}}},"type":"blog_tag","score_mode":"sum","min_children":2,"max_children":10}}}}', $json);
+	}
+
+	public function testNestHasChild()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->bool(function($query)
+		{
+			$query->must(function($must)
+			{
+				$must->hasChild(function($hasChild)
+				{
+					$hasChild->type('blog_tag');
+					$hasChild->scoreMode('sum');
+
+					$hasChild->minChildren(2);
+					$hasChild->maxChildren(10);
+
+					$hasChild->query(function($query)
+					{
+						$query->term('bar', 'baz');
+					});
+				});
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"has_child":{"query":{"term":{"bar":{"value":"baz"}}},"type":"blog_tag","score_mode":"sum","min_children":2,"max_children":10}}}}}}', $json);
 	}
 
 	public function getGrammar()

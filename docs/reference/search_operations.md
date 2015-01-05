@@ -296,6 +296,28 @@ Stretchy::search('foo')
 	->get();
 ```
 
+# Has child query
+
+For **has child** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-has-child-query.html)
+
+```php
+Stretchy::search('foo')
+	->hasChild(function($hasChild)
+	{
+		$hasChild->type('blog_tag');
+		$hasChild->scoreMode('sum');
+
+		$hasChild->minChildren(2);
+		$hasChild->maxChildren(10);
+
+		$hasChild->query(function($query)
+		{
+			$query->term('bar', 'baz');
+		});
+	})
+	->get();
+```
+
 # Range query
 
 For **range** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-range-query.html)

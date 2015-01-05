@@ -151,7 +151,6 @@ class Clause
 	/**
 	 * Create a sub clause and executes its callback.
 	 *
-	 * @param array  &$container
 	 * @param Closure $callback
 	 * @return \Tamayo\Stretchy\Search\Clauses\Clause
 	 */
@@ -169,7 +168,6 @@ class Clause
 	/**
 	 * Create a sub query and execute its callback.
 	 *
-	 * @param array  &$container
 	 * @param Closure $callback
 	 */
 	public function createSubquery(Closure $callback)
@@ -177,8 +175,6 @@ class Clause
 		$query = $this->builder->newInstance()->setSubquery();
 
 		$callback($query);
-
-		$container = $query;
 
 		return $query;
 	}

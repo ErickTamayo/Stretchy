@@ -1,8 +1,5 @@
 <?php namespace Tamayo\Stretchy\Search\Clauses;
 
-use Closure;
-use Tamayo\Stretchy\Search\Clauses\Clause;
-
 class DisMax extends Clause
 {
 	/**
@@ -13,21 +10,10 @@ class DisMax extends Clause
 	protected $constraints = ['tie_breaker', 'boost'];
 
 	/**
-	 * Queries subquery.
+	 * Available sub queries in the clause.
 	 *
-	 * @var \Tamayo\Stretchy\Search\Builder
+	 * @var array
 	 */
-	public $queries;
-
-	/**
-	 * Queries subquery.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function queries(Closure $callback)
-	{
-		return $this->addSubquery($this->queries, $callback);
-	}
+	protected $subqueries = ['queries'];
 
 }

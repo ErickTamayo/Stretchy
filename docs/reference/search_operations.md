@@ -220,7 +220,7 @@ Stretchy::search('foo')
 
 # Fuzzy like this field query
 
-For **fuzzy like this** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-flt-field-query.html)
+For **fuzzy like this field** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-flt-field-query.html)
 
 ```php
 Stretchy::search('foo')->fuzzyLikeThisField('baz', 'text like this one', ['fuzziness' => 1.5])->get();
@@ -258,6 +258,40 @@ Stretchy::search('foo')
 	->fuzzy('price', 12, function($fuzzy)
 	{
 		$fuzzy->fuzziness(2);
+	})
+	->get();
+```
+
+# Geoshape query
+
+For **geoshape** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-geo-shape-query.html)
+
+```php
+Stretchy::search('foo')->geoShape('location', [[13, 53],[14, 52]])->get();
+```
+
+###Indexed shape
+
+```php
+Stretchy::search('foo')
+	->geoShape('location', [[13, 53],[14, 52]], 'indexed_shape', [
+		'id' 	=> 'DEU',
+		'type'	=> 'countries',
+		'index'	=> 'shapes',
+		'path'	=> 'location'
+	])
+	->get();
+```
+or
+
+```php
+Stretchy::search('foo')
+	->geoShape('location', [[13, 53],[14, 52]], 'indexed_shape', function($shape)
+	{
+		$shape->id('DEU');
+		$shape->type('counstries');
+		$shape->index('shapes');
+		$shape->path('location');
 	})
 	->get();
 ```

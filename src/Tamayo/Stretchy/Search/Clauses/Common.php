@@ -1,8 +1,5 @@
 <?php namespace Tamayo\Stretchy\Search\Clauses;
 
-use Closure;
-use Tamayo\Stretchy\Search\Clauses\Clause;
-
 class Common extends Clause
 {
 	/**
@@ -13,21 +10,9 @@ class Common extends Clause
 	protected $constraints = ['query', 'cutoff_frequency', 'low_freq_operator', 'high_freq_operator', 'boost', 'analyzer', 'disable_coord'];
 
 	/**
-	 * Should sub clause.
+	 * Available sub clauses in the clause.
 	 *
-	 * @var \Tamayo\Stretchy\Search\Clauses\Clause
+	 * @var array
 	 */
-	public $minimumShouldMatch;
-
-	/**
-	 * Minimun should match sub clause.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Clauses\Clause
-	 */
-	public function minimumShouldMatch(Closure $callback)
-	{
-		return $this->addSubclause($this->minimumShouldMatch, ['low_freq', 'high_freq'], $callback);
-	}
-
+	protected $subclauses = ['minimum_should_match' => ['low_freq', 'high_freq']];
 }

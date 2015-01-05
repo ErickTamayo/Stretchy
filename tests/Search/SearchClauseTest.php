@@ -16,7 +16,7 @@ class SearchClauseTest extends PHPUnit_Framework_TestCase
 
 		$clause->fooBar('baz');
 
-		$this->assertEquals(['foo_bar' => 'baz'], $clause->getAffectedConstraints());
+		$this->assertEquals([['field' => 'foo_bar', 'value' => 'baz', 'type' => 'constraint']], $clause->getAffectedConstraints());
 	}
 
     /**

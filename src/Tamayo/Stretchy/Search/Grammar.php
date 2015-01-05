@@ -27,7 +27,7 @@ class Grammar extends BaseGrammar {
 		else
 		{
 			$body = $this->compileSubqueries($builder, [
-				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score', 'dis_max', 'filtered', 'range', 'fuzzy_like_this', 'fuzzy_like_this_field', 'fuzzy'
+				'match', 'multi_match', 'bool', 'boosting', 'common', 'term', 'constant_score', 'dis_max', 'filtered', 'range', 'fuzzy_like_this', 'fuzzy_like_this_field', 'fuzzy', 'geo_shape'
 			]);
 		}
 
@@ -70,7 +70,7 @@ class Grammar extends BaseGrammar {
 	 */
 	protected function compileBool($bool)
 	{
-		$compiled = $this->compileClause($bool['value'], ['must', 'mustNot', 'should']);
+		$compiled = $this->compileClause($bool['value']);
 
 		return $this->compile('bool', $compiled);
 	}
@@ -83,7 +83,7 @@ class Grammar extends BaseGrammar {
 	 */
 	protected function compileBoosting($boosting)
 	{
-		$compiled = $this->compileClause($boosting['value'], ['positive', 'negative']);
+		$compiled = $this->compileClause($boosting['value']);
 
 		return $this->compile('boosting', $compiled);
 	}
@@ -96,7 +96,7 @@ class Grammar extends BaseGrammar {
 	 */
 	protected function compileCommon($common)
 	{
-		$compiled = $this->compile($common['field'], $this->compileClause($common['value'], ['minimumShouldMatch']));
+		$compiled = $this->compile($common['field'], $this->compileClause($common['value']));
 
 		return $this->compile('common', $compiled);
 	}
@@ -109,7 +109,7 @@ class Grammar extends BaseGrammar {
 	 */
 	protected function compileConstantScore($constantScore)
 	{
-		$compiled = $this->compileClause($constantScore['value'], ['filter', 'query']);
+		$compiled = $this->compileClause($constantScore['value']);
 
 		return $this->compile('constant_score', $compiled);
 	}
@@ -135,7 +135,7 @@ class Grammar extends BaseGrammar {
 	 */
 	protected function compileFiltered($filtered)
 	{
-		$compiled = $this->compileClause($filtered['value'], ['query', 'filter']);
+		$compiled = $this->compileClause($filtered['value']);
 
 		return $this->compile('filtered', $compiled);
 	}
@@ -173,15 +173,9 @@ class Grammar extends BaseGrammar {
 	 * @param  array|null $container
 	 * @return array
 	 */
-	protected function compileClause(Clause $clause, $subClauses = array())
+	protected function compileClause(Clause $clause)
 	{
-		$compiled = $clause->getAffectedConstraints();
-
-		foreach ($subClauses as $subClause) {
-			if (isset($clause->$subClause)) {
-				$compiled = array_merge($this->compile(Str::snake($subClause), $clause->$subClause->toArray()), $compiled);
-			}
-		}
+		$compiled = $clause->toArray();
 
 		if (empty($compiled)) {
 			return null;

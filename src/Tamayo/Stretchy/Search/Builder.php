@@ -474,7 +474,7 @@ class Builder extends BaseBuilder {
 	 * Elastic has child query.
 	 *
 	 * @param  Closure $query
-	 * @return boolean
+	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
 	public function hasChild(Closure $callback)
 	{
@@ -483,6 +483,45 @@ class Builder extends BaseBuilder {
 		$callback($hasChild);
 
 		$this->setStatement('has_child', null, $hasChild);
+
+		return $this;
+	}
+
+	/**
+	 * Elastic has parent query.
+	 *
+	 * @param  Closure $query
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function hasParent(Closure $callback)
+	{
+		$hasParent = new \Tamayo\Stretchy\Search\Clauses\HasParent($this);
+
+		$callback($hasParent);
+
+		$this->setStatement('has_parent', null, $hasParent);
+
+		return $this;
+	}
+
+	/**
+	 * Elasticsearch ids query.
+	 *
+	 * @param  string|array|null $type
+	 * @param  string|array 	 $values
+	 * @return  \Tamayo\Stretchy\Search\Builder
+	 */
+	public function ids($values, $type = null)
+	{
+		$ids = new \Tamayo\Stretchy\Search\Clauses\Ids($this);
+
+		$ids->values($values);
+
+		if (isset($type)) {
+			$ids->type($type);
+		}
+
+		$this->setStatement('ids', null, $ids);
 
 		return $this;
 	}

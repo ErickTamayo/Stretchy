@@ -569,6 +569,37 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"has_child":{"query":{"term":{"bar":{"value":"baz"}}},"type":"blog_tag","score_mode":"sum","min_children":2,"max_children":10}}}}}}', $json);
 	}
 
+	public function testHasParent()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->hasParent(function($hasParent)
+		{
+			$hasParent->type('blog');
+			$hasParent->scoreMode('score');
+
+			$hasParent->query(function($query)
+			{
+				$query->term('bar', 'baz');
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"has_parent":{"query":{"term":{"bar":{"value":"baz"}}},"type":"blog","score_mode":"score"}}}}', $json);
+	}
+
+	public function testIds()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->ids([2, 100], 'my_type');
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"ids":{"values":[2,100],"type":"my_type"}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

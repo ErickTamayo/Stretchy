@@ -318,6 +318,33 @@ Stretchy::search('foo')
 	->get();
 ```
 
+# Has parent query
+
+For **has parent** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-has-parent-query.html)
+
+```php
+Stretchy::search('foo')
+	->hasParent(function($hasParent)
+	{
+		$hasParent->type('blog');
+		$hasParent->scoreMode('score');
+
+		$hasParent->query(function($query)
+		{
+			$query->term('bar', 'baz');
+		});
+	})
+	->get();
+```
+
+# Ids query
+
+For **ids** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html)
+
+```php
+Stretchy::search('foo')->ids([2, 100], 'my_type')->get();
+```
+
 # Range query
 
 For **range** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-range-query.html)

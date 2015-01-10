@@ -345,6 +345,72 @@ For **ids** reference in elasticsearch [click here](http://www.elasticsearch.org
 Stretchy::search('foo')->ids([2, 100], 'my_type')->get();
 ```
 
+# Indices query
+
+For **indices** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-indices-query.html)
+
+```php
+Stretchy::search('foo')
+	->indices(['index1', 'index2'], function($indices)
+	{
+		$indices->query(function($query)
+		{
+			$query->term('tag', 'wow');
+		});
+
+		$indices->noMatchQuery(function($noMatchQuery)
+		{
+			$noMatchQuery->term('tag', 'kow');
+		});
+	})
+	->get();
+```
+
+# Match all query
+
+For **match all** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-match-all-query.html)
+
+```php
+Stretchy::search('foo')->matchAll()->get();
+```
+
+or
+
+```php
+Stretchy::search('foo')->matchAll(['boost' => 1.2])->get();
+```
+
+# More like this query
+
+For **match all** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-mlt-query.html)
+
+```php
+Stretchy::search('foo')
+	->moreLikeThis(['name.first', 'name.last'], 'text like this one', ['min_term_freq' => 1, 'max_query_terms' => 12])
+	->get();
+```
+
+or
+
+```php
+Stretchy::search('foo')
+	->moreLikeThis(['name.first', 'name.last'], 'text like this one', function($moreLikeThis)
+	{
+		$moreLikeThis->minTermFreq(1);
+		$moreLikeThis->maxQueryTerms(12);
+
+		$moreLikeThis->docs([
+			['_index' => 'test', '_type' => 'type', '_id' => 1],
+			['_index' => 'test', '_type' => 'type', '_id' => 2]
+		]);
+
+		$moreLikeThis->ids(['3', '4']);
+	})
+	->get();
+```
+
+
+
 # Range query
 
 For **range** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-range-query.html)

@@ -37,6 +37,21 @@ class Grammar extends BaseGrammar {
 	}
 
 	/**
+	 * Compile a match all statement.
+	 *
+	 * @param  array $matchAll
+	 * @return array
+	 */
+	public function compileMatchAll($matchAll)
+	{
+		$compiled = $this->compileClause($matchAll['value']);
+
+		$compiled = isset($compiled)? $compiled : new \StdClass;
+
+		return $this->compile('match_all', $compiled);
+	}
+
+	/**
 	 * Compile single statement.
 	 *
 	 * @param  array $statement
@@ -47,108 +62,6 @@ class Grammar extends BaseGrammar {
 		$compiled = array();
 
 		return $this->compile('query', $this->callCompileMethod($statement['type'], $statement));
-	}
-
-	/**
-	 * Compile a multi match statement.
-	 *
-	 * @param  array $multiMatch
-	 * @return array
-	 */
-	protected function compileMultiMatch($multiMatch)
-	{
-		return $this->compile('multi_match', $this->compileClause($multiMatch['value']));
-	}
-
-	/**
-	 * Compile a bool statement.
-	 *
-	 * @param  array $bool
-	 * @return array
-	 */
-	protected function compileBool($bool)
-	{
-		$compiled = $this->compileClause($bool['value']);
-
-		return $this->compile('bool', $compiled);
-	}
-
-	/**
-	 * Compile a boosting statement.
-	 *
-	 * @param  array $boosting
-	 * @return array
-	 */
-	protected function compileBoosting($boosting)
-	{
-		$compiled = $this->compileClause($boosting['value']);
-
-		return $this->compile('boosting', $compiled);
-	}
-
-	/**
-	 * Compile a common statement.
-	 *
-	 * @param  array $common
-	 * @return array
-	 */
-	protected function compileCommon($common)
-	{
-		$compiled = $this->compile($common['field'], $this->compileClause($common['value']));
-
-		return $this->compile('common', $compiled);
-	}
-
-	/**
-	 * Compile a constant score statement.
-	 *
-	 * @param  array $constantScore
-	 * @return array
-	 */
-	protected function compileConstantScore($constantScore)
-	{
-		$compiled = $this->compileClause($constantScore['value']);
-
-		return $this->compile('constant_score', $compiled);
-	}
-
-	/**
-	 * Compile a dis max statement.
-	 *
-	 * @param  array $disMax
-	 * @return array
-	 */
-	protected function compileDisMax($disMax)
-	{
-		$compiled = $this->compileClause($disMax['value'], ['queries']);
-
-		return $this->compile('dis_max', $compiled);
-	}
-
-	/**
-	 * Compile a filtered statement.
-	 *
-	 * @param  array $filtered
-	 * @return array
-	 */
-	protected function compileFiltered($filtered)
-	{
-		$compiled = $this->compileClause($filtered['value']);
-
-		return $this->compile('filtered', $compiled);
-	}
-
-	/**
-	 * Compile a fuzzy like this statement.
-	 *
-	 * @param  array $fuzzyLikeThis
-	 * @return array
-	 */
-	protected function compileFuzzyLikeThis($fuzzyLikeThis)
-	{
-		$compiled = $this->compileClause($fuzzyLikeThis['value']);
-
-		return $this->compile('fuzzy_like_this', $compiled);
 	}
 
 	/**

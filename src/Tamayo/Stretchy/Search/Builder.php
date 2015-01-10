@@ -249,7 +249,7 @@ class Builder extends BaseBuilder {
 
 		$match->type($type);
 
-		$this->setStatement('multi_match', $fields, $match);
+		$this->setStatement('multi_match', null, $match);
 
 		return $this;
 	}
@@ -509,7 +509,7 @@ class Builder extends BaseBuilder {
 	 *
 	 * @param  string|array|null $type
 	 * @param  string|array 	 $values
-	 * @return  \Tamayo\Stretchy\Search\Builder
+	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
 	public function ids($values, $type = null)
 	{
@@ -522,6 +522,65 @@ class Builder extends BaseBuilder {
 		}
 
 		$this->setStatement('ids', null, $ids);
+
+		return $this;
+	}
+
+	/**
+	 * Elasticsearch indices query.
+	 *
+	 * @param  array  $indices
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function indices(array $indices, Closure $callback)
+	{
+		$indices = new \Tamayo\Stretchy\Search\Clauses\Indices($this);
+
+		$callback($indices);
+
+		$this->setStatement('indices', null, $indices);
+
+		return $this;
+	}
+
+	/**
+	 * Elasticsearch match all query.
+	 *
+	 * @param  array  $indices
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function matchAll($parameters = null)
+	{
+		$matchAll = new \Tamayo\Stretchy\Search\Clauses\MatchAll($this);
+
+		$this->addClauseParameters($matchAll, $parameters);
+
+		$this->setStatement('match_all', null, $matchAll);
+
+		return $this;
+	}
+
+	/**
+	 * Elasticsearch more like this query.
+	 *
+	 * @param  array  			  $fields
+	 * @param  string 			  $likeText
+	 * @param  Closure|array|null $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function moreLikeThis(array $fields, $likeText, $parameters = null)
+	{
+		$moreLikeThis = new \Tamayo\Stretchy\Search\Clauses\MoreLikeThis($this);
+
+		$this->addClauseParameters($moreLikeThis, $parameters);
+
+		$moreLikeThis->fields($fields);
+
+		$moreLikeThis->likeText($likeText);
+
+		$this->setStatement('more_like_this', null, $moreLikeThis);
 
 		return $this;
 	}

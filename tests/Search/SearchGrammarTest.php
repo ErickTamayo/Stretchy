@@ -600,6 +600,77 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"ids":{"values":[2,100],"type":"my_type"}}}}', $json);
 	}
 
+	public function testIndices()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->indices(['index1', 'index2'], function($indices)
+		{
+			$indices->query(function($query)
+			{
+				$query->term('tag', 'wow');
+			});
+
+			$indices->noMatchQuery(function($noMatchQuery)
+			{
+				$noMatchQuery->term('tag', 'kow');
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"indices":{"no_match_query":{"term":{"tag":{"value":"kow"}}},"query":{"term":{"tag":{"value":"wow"}}}}}}}', $json);
+	}
+
+	public function testMatchAll()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->matchAll();
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"match_all":{}}}}', $json);
+
+		$builder = $builder->newInstance();
+
+		$builder->matchAll(['boost' => 1.2]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"match_all":{"boost":1.2}}}}', $json);
+	}
+
+	public function testMoreLikeThis()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->moreLikeThis(['name.first', 'name.last'], 'text like this one', ['min_term_freq' => 1, 'max_query_terms' => 12]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"more_like_this":{"min_term_freq":1,"max_query_terms":12,"fields":["name.first","name.last"],"like_text":"text like this one"}}}}', $json);
+
+		$builder = $builder->newInstance();
+
+		$builder->moreLikeThis(['name.first', 'name.last'], 'text like this one', function($moreLikeThis)
+		{
+			$moreLikeThis->minTermFreq(1);
+			$moreLikeThis->maxQueryTerms(12);
+
+			$moreLikeThis->docs([
+				['_index' => 'test', '_type' => 'type', '_id' => 1],
+				['_index' => 'test', '_type' => 'type', '_id' => 2]
+			]);
+
+			$moreLikeThis->ids(['3', '4']);
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"more_like_this":{"min_term_freq":1,"max_query_terms":12,"docs":[{"_index":"test","_type":"type","_id":1},{"_index":"test","_type":"type","_id":2}],"ids":["3","4"],"fields":["name.first","name.last"],"like_text":"text like this one"}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

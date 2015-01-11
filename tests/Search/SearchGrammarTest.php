@@ -1,6 +1,7 @@
 <?php
 
 use Tamayo\Stretchy\Connection;
+use Tamayo\Stretchy\Query\Clause;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Builder;
 use Tamayo\Stretchy\Search\Processor;
@@ -671,6 +672,44 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"more_like_this":{"min_term_freq":1,"max_query_terms":12,"docs":[{"_index":"test","_type":"type","_id":1},{"_index":"test","_type":"type","_id":2}],"ids":["3","4"],"fields":["name.first","name.last"],"like_text":"text like this one"}}}}', $json);
 	}
 
+	public function testNested()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->nested(function($nested)
+		{
+			$nested->path('obj1');
+			$nested->scoreMode('avg');
+
+			$nested->query(function($query)
+			{
+				$query->bool(function($bool)
+				{
+					$bool->must(function($must)
+					{
+						$must->match('obj1.name', 'blue');
+						$must->range('obj1.count', ['gt' => 5]);
+					});
+				});
+			});
+		});
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"nested":{"query":{"bool":{"must":[{"match":{"obj1.name":{"query":"blue","type":"boolean"}}},{"range":{"obj1.count":{"gt":5}}}]}},"path":"obj1","score_mode":"avg"}}}}', $json);
+	}
+
+	public function testPrefix()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->prefix('user', 'ki', ['boost' => 2]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"prefix":{"user":{"boost":2,"value":"ki"}}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;
@@ -690,8 +729,13 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		return new Processor;
 	}
 
+	public function getClause()
+	{
+		return new Clause;
+	}
+
 	public function getBuilder()
 	{
-		return new Builder($this->getConnection(), $this->getGrammar(), $this->getProcessor());
+		return new Builder($this->getConnection(), $this->getGrammar(), $this->getProcessor(), $this->getClause());
 	}
 }

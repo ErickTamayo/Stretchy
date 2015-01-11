@@ -1,8 +1,9 @@
-<?php namespace Tamayo\Stretchy\Search\Clauses;
+<?php namespace Tamayo\Stretchy\Query;
 
 use Closure;
 use Illuminate\Support\Str;
 use Tamayo\Stretchy\Search\Builder;
+use Tamayo\Stretchy\Query\Dictionary;
 
 class Clause
 {
@@ -43,14 +44,54 @@ class Clause
 	protected $builder;
 
 	/**
-	 * Create a new boolean clause.
+	 * Make a new clause.
 	 *
-	 * @param \Tamayo\Stretchy\Search\Builder $builder
-	 * @param Grammar                     $grammar
+	 * @param  string  $type
+	 * @param  Builder $builder
+	 * @return \Tamayo\Stretchy\Query\Clause
 	 */
-	public function __construct(Builder $builder)
+	public function make($type, Builder $builder)
+	{
+		$clause = new static;
+
+		$clause->setQueryBuilder($builder);
+		$clause->loadFromDictionary($type);
+
+		return $clause;
+	}
+
+	/**
+	 * Set the query builder.
+	 *
+	 * @param Builder $builder
+	 * @return void
+	 */
+	public function setQueryBuilder(Builder $builder)
 	{
 		$this->builder = $builder;
+	}
+
+	/**
+	 * Load the constraints from the dictionary.
+	 *
+	 * @param  string $type
+	 * @return void
+	 */
+	public function loadFromDictionary($type)
+	{
+		$type = Str::camel($type);
+
+		$constraints = Dictionary::$$type;
+
+		if (array_key_exists('constraints', $constraints)) {
+			$this->constraints = $constraints['constraints'];
+		}
+		if (array_key_exists('subqueries', $constraints)) {
+			$this->subqueries = $constraints['subqueries'];
+		}
+		if (array_key_exists('subclauses', $constraints)) {
+			$this->subclauses = $constraints['subclauses'];
+		}
 	}
 
 	/**

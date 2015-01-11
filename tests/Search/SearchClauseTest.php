@@ -1,16 +1,18 @@
 <?php
 
 use Tamayo\Stretchy\Connection;
+use Tamayo\Stretchy\Query\Clause;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Builder;
 use Tamayo\Stretchy\Search\Processor;
-use Tamayo\Stretchy\Search\Clauses\Clause;
+
+
 
 class SearchClauseTest extends PHPUnit_Framework_TestCase
 {
 	public function testClause()
 	{
-		$clause = new Clause($this->getBuilder());
+		$clause = new Clause();
 
 		$clause->setConstraints(['foo_bar']);
 
@@ -24,32 +26,8 @@ class SearchClauseTest extends PHPUnit_Framework_TestCase
      */
 	public function testClauseException()
 	{
-		$clause = new Clause($this->getBuilder());
+		$clause = new Clause();
 
 		$clause->fooBar('baz');
-	}
-
-	public function getGrammar()
-	{
-		return new Grammar;
-	}
-
-	public function getConnection()
-	{
-		$connection = Mockery::mock('Tamayo\Stretchy\Connection');
-
-		$connection->shouldReceive('getIndexPrefix')->andReturn('');
-
-		return $connection;
-	}
-
-	public function getProcessor()
-	{
-		return new Processor;
-	}
-
-	public function getBuilder()
-	{
-		return new Builder($this->getConnection(), $this->getGrammar(), $this->getProcessor());
 	}
 }

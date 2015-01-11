@@ -89,7 +89,7 @@ class Grammar extends BaseGrammar {
 	 * @param  array|null $container
 	 * @return array
 	 */
-	protected function compileClause(Clause $clause)
+	protected function compileClause($clause)
 	{
 		$compiled = $clause->toArray();
 

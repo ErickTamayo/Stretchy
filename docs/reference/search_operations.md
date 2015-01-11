@@ -409,7 +409,39 @@ Stretchy::search('foo')
 	->get();
 ```
 
+# Nested query
 
+For **nested** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-nested-query.html)
+
+```php
+Stretchy::search('foo')
+	->nested(function($nested)
+	{
+		$nested->path('obj1');
+		$nested->scoreMode('avg');
+
+		$nested->query(function($query)
+		{
+			$query->bool(function($bool)
+			{
+				$bool->must(function($must)
+				{
+					$must->match('obj1.name', 'blue');
+					$must->range('obj1.count', ['gt' => 5]);
+				});
+			});
+		});
+	})
+	->get();
+```
+
+# Prefix query
+
+For **prefix** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-prefix-query.html)
+
+```php
+Stretchy::search('foo')->prefix('user', 'ki', ['boost' => 2])->get();
+```
 
 # Range query
 

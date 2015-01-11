@@ -3,9 +3,9 @@
 use Closure;
 use Illuminate\Support\Str;
 use Tamayo\Stretchy\Connection;
+use Tamayo\Stretchy\Query\Clause;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Processor;
-use Tamayo\Stretchy\Search\Clauses\Clause;
 use Tamayo\Stretchy\Builder as BaseBuilder;
 
 class Builder extends BaseBuilder {
@@ -135,11 +135,12 @@ class Builder extends BaseBuilder {
 	 * @param \Tamayo\Stretchy\Connection $connection
 	 * @param Grammar                     $grammar
 	 */
-	public function __construct(Connection $connection, Grammar $grammar, Processor $processor)
+	public function __construct(Connection $connection, Grammar $grammar, Processor $processor, Clause $clause)
 	{
 		parent::__construct($connection, $grammar);
 
-		$this->processor  = $processor;
+		$this->processor = $processor;
+		$this->clause    = $clause;
 	}
 
 	/**
@@ -185,9 +186,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function match($field, $matching, $parameters = null, $type = 'boolean')
 	{
-		$match = new Clause($this);
-
-		$match->setConstraints(['query', 'fields', 'type', 'tie_breaker', 'analyzer', 'boost', 'operator', 'minimum_should_match', 'fuzziness', 'prefix_length', 'max_expansions', 'rewrite', 'zero_terms_query', 'cutoff_frequency', 'lenient']);
+		$match = $this->newClause('match');
 
 		$this->addClauseParameters($match, $parameters);
 
@@ -237,9 +236,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function multiMatch(array $fields, $matching, Closure $parameters = null, $type = 'best_fields')
 	{
-		$match = new Clause($this);
-
-		$match->setConstraints(['query', 'fields', 'type', 'tie_breaker', 'analyzer', 'boost', 'operator', 'minimum_should_match', 'fuzziness', 'prefix_length', 'max_expansions', 'rewrite', 'zero_terms_query', 'cutoff_frequency']);
+		$match = $this->newClause('multi_match');
 
 		$this->addClauseParameters($match, $parameters);
 
@@ -262,7 +259,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function bool(Closure $callback)
 	{
-		$bool = new \Tamayo\Stretchy\Search\Clauses\Bool($this);
+		$bool = $this->newClause('bool');
 
 		$callback($bool);
 
@@ -279,7 +276,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function boosting(Closure $callback)
 	{
-		$boosting = new \Tamayo\Stretchy\Search\Clauses\Boosting($this);
+		$boosting = $this->newClause('boosting');
 
 		$callback($boosting);
 
@@ -298,7 +295,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function common($field, $value, $parameters = null)
 	{
-		$common = new \Tamayo\Stretchy\Search\Clauses\Common($this);
+		$common = $this->newClause('common');
 
 		$this->addClauseParameters($common, $parameters);
 
@@ -317,7 +314,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function constantScore(Closure $callback)
 	{
-		$constantScore = new \Tamayo\Stretchy\Search\Clauses\ConstantScore($this);
+		$constantScore = $this->newClause('constant_score');
 
 		$callback($constantScore);
 
@@ -334,7 +331,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function disMax(Closure $callback)
 	{
-		$disMax = new \Tamayo\Stretchy\Search\Clauses\DisMax($this);
+		$disMax = $this->newClause('dis_max');
 
 		$callback($disMax);
 
@@ -351,7 +348,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function filtered(Closure $callback)
 	{
-		$filtered = new \Tamayo\Stretchy\Search\Clauses\Filtered($this);
+		$filtered = $this->newClause('filtered');
 
 		$callback($filtered);
 
@@ -362,9 +359,7 @@ class Builder extends BaseBuilder {
 
 	public function fuzzyLikeThis(array $fields, $value, $parameters = null)
 	{
-		$fuzzyLikeThis = new Clause($this);
-
-		$fuzzyLikeThis->setConstraints(['fields', 'like_text', 'ignore_tf', 'max_query_terms', 'fuzziness', 'prefix_length', 'boost', 'analyzer']);
+		$fuzzyLikeThis = $this->newClause('fuzzy_like_this');
 
 		$this->addClauseParameters($fuzzyLikeThis, $parameters);
 
@@ -387,9 +382,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function fuzzyLikeThisField($field, $value, $parameters = null)
 	{
-		$fuzzyLikeThisField = new Clause($this);
-
-		$fuzzyLikeThisField->setConstraints(['like_text', 'ignore_tf', 'max_query_terms', 'fuzziness', 'prefix_length', 'boost', 'analyzer']);
+		$fuzzyLikeThisField = $this->newClause('fuzzy_like_this_field');
 
 		$this->addClauseParameters($fuzzyLikeThisField, $parameters);
 
@@ -423,9 +416,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function fuzzy($field, $value, $parameters = null)
 	{
-		$fuzzy = new Clause($this);
-
-		$fuzzy->setConstraints(['value', 'boost', 'fuzziness', 'prefix_length', 'max_expansions']);
+		$fuzzy = $this->newClause('fuzzy');
 
 		$this->addClauseParameters($fuzzy, $parameters);
 
@@ -446,7 +437,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function geoShape($field, array $coordinates, $shape = 'shape', $parameters = null)
 	{
-		$geoShape = new \Tamayo\Stretchy\Search\Clauses\GeoShape($this);
+		$geoShape = $this->newClause('geo_shape');
 
 		if ($shape == 'shape') {
 			$geoShape->shape(function($shape) use ($coordinates, $parameters)
@@ -478,7 +469,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function hasChild(Closure $callback)
 	{
-		$hasChild = new \Tamayo\Stretchy\Search\Clauses\HasChild($this);
+		$hasChild = $this->newClause('has_child');
 
 		$callback($hasChild);
 
@@ -495,7 +486,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function hasParent(Closure $callback)
 	{
-		$hasParent = new \Tamayo\Stretchy\Search\Clauses\HasParent($this);
+		$hasParent = $this->newClause('has_parent');
 
 		$callback($hasParent);
 
@@ -513,7 +504,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function ids($values, $type = null)
 	{
-		$ids = new \Tamayo\Stretchy\Search\Clauses\Ids($this);
+		$ids = $this->newClause('ids');
 
 		$ids->values($values);
 
@@ -535,7 +526,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function indices(array $indices, Closure $callback)
 	{
-		$indices = new \Tamayo\Stretchy\Search\Clauses\Indices($this);
+		$indices = $this->newClause('indices');
 
 		$callback($indices);
 
@@ -553,7 +544,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function matchAll($parameters = null)
 	{
-		$matchAll = new \Tamayo\Stretchy\Search\Clauses\MatchAll($this);
+		$matchAll = $this->newClause('match_all');
 
 		$this->addClauseParameters($matchAll, $parameters);
 
@@ -572,7 +563,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function moreLikeThis(array $fields, $likeText, $parameters = null)
 	{
-		$moreLikeThis = new \Tamayo\Stretchy\Search\Clauses\MoreLikeThis($this);
+		$moreLikeThis = $this->newClause('more_like_this');
 
 		$this->addClauseParameters($moreLikeThis, $parameters);
 
@@ -586,6 +577,45 @@ class Builder extends BaseBuilder {
 	}
 
 	/**
+	 * Elasticsearch nested query.
+	 *
+	 * @param  Closure $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function nested(Closure $callback)
+	{
+		$nested = $this->newClause('nested');
+
+		$callback($nested);
+
+		$this->setStatement('nested', null, $nested);
+
+		return $this;
+	}
+
+	/**
+	 * Elasticsearch prefix query.
+	 *
+	 * @param  string $field
+	 * @param  mixed $value
+	 * @param  Closure|array|null $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function prefix($field, $value, $parameters = null)
+	{
+		$prefix = $this->newClause('prefix');
+
+		$this->addClauseParameters($prefix, $parameters);
+
+		$prefix->value($value);
+
+		$this->setStatement('prefix', $field, $prefix);
+
+		return $this;
+	}
+
+
+	/**
 	 * Elastic range query.
 	 *
 	 * @param  string $field
@@ -594,9 +624,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function range($field, $parameters)
 	{
-		$range = new Clause($this);
-
-		$range->setConstraints(['gte', 'gt', 'lte', 'lt', 'boost', 'time_zone']);
+		$range = $this->newClause('range');
 
 		$this->addClauseParameters($range, $parameters);
 
@@ -615,9 +643,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function term($field, $value, $parameters = null)
 	{
-		$term = new Clause($this);
-
-		$term->setConstraints(['boost', 'value']);
+		$term = $this->newClause('term');
 
 		$this->addClauseParameters($term, $parameters);
 
@@ -629,13 +655,24 @@ class Builder extends BaseBuilder {
 	}
 
 	/**
+	 * Make a new clause.
+	 *
+	 * @param  string $name
+	 * @return Tamayo\Stretchy\Query\Clause
+	 */
+	protected function newClause($name)
+	{
+		return $this->clause->make($name, $this);
+	}
+
+	/**
 	 * Add a parameters to a clause.
 	 *
 	 * @param \Tamayo\Stretchy\Search\Clauses\Clause $clause
 	 * @param Closure|array 						 $parameters
 	 * @return Tamayo\Stretchy\Search\Clauses\Clause
 	 */
-	protected function addClauseParameters(Clause &$clause, $parameters)
+	protected function addClauseParameters(&$clause, $parameters)
 	{
 		if ($parameters instanceof Closure) {
 			$parameters($clause);
@@ -745,7 +782,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function newInstance()
 	{
-		return new static($this->connection, $this->grammar, $this->processor);
+		return new static($this->connection, $this->grammar, $this->processor, $this->clause);
 	}
 
 }

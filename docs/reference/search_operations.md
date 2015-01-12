@@ -443,6 +443,22 @@ For **prefix** reference in elasticsearch [click here](http://www.elasticsearch.
 Stretchy::search('foo')->prefix('user', 'ki', ['boost' => 2])->get();
 ```
 
+# Query string query
+
+For **query string** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html)
+
+```php
+Stretchy::search('foo')->queryString('this AND that OR thus', ['default_field' => 'content'])->get();
+```
+
+# Regex query
+
+For **query string** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-regexp-query.html)
+
+```php
+Stretchy::search('foo')->regex('name.first', 's.*y', ['boost' => 1.2])->get();
+```
+
 # Range query
 
 For **range** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-range-query.html)
@@ -487,3 +503,34 @@ or
 ```php
 Stretchy::search('foo')->term('bar', 'baz', ['boost' => 2])->get();
 ```
+
+# Terms query
+
+For **terms** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html)
+
+```php
+Stretchy::search('foo')->terms('tags', ['blue', 'pill'], ['minimum_should_match' => 1])->get();
+```
+
+# Wildcard query
+
+For **terms** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-wildcard-query.html)
+
+```php
+Stretchy::search('foo')->wildcard('user', 'ki*y', ['boost' => 2.0])->get();
+```
+
+# Raw query
+
+You also can do a raw query by a json or array
+
+```php
+Stretchy::search('foo')->raw('{"match":{"testField":"abc"}}')->get();
+```
+
+or
+
+```php
+Stretchy::search('foo')->raw(['match' => ['testField' => 'abc']])->get();
+```
+

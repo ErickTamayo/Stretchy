@@ -710,6 +710,83 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('{"index":"*","body":{"query":{"prefix":{"user":{"boost":2,"value":"ki"}}}}}', $json);
 	}
 
+	public function testQueryString()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->queryString('this AND that OR thus', ['default_field' => 'content']);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"query_string":{"default_field":"content","query":"this AND that OR thus"}}}}', $json);
+	}
+
+	public function testSimpleQueryString()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->simpleQueryString('"fried eggs" +(eggplant | potato) -frittata', ['analyzer' => 'snowball']);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"simple_query_string":{"analyzer":"snowball","query":"\"fried eggs\" +(eggplant | potato) -frittata"}}}}', $json);
+	}
+
+	public function testRegex()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->regex('name.first', 's.*y', ['boost' => 1.2]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"regex":{"name.first":{"boost":1.2,"value":"s.*y"}}}}}', $json);
+	}
+
+	public function testTerms()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->terms('tags', ['blue', 'pill'], ['minimum_should_match' => 1]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"terms":{"minimum_should_match":1,"tags":["blue","pill"]}}}}', $json);
+	}
+
+	public function testWildcardArray()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->raw(['match' => ['testField' => 'abc']]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"match":{"testField":"abc"}}}}', $json);
+	}
+
+	public function testWildcardJson()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->raw('{"match":{"testField":"abc"}}');
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"match":{"testField":"abc"}}}}', $json);
+	}
+
+	public function testRaw()
+	{
+		$builder = $this->getBuilder();
+
+		$builder->wildcard('user', 'ki*y', ['boost' => 2.0]);
+
+		$json = $builder->toJson();
+
+		$this->assertEquals('{"index":"*","body":{"query":{"wildcard":{"user":{"boost":2,"value":"ki*y"}}}}}', $json);
+	}
+
 	public function getGrammar()
 	{
 		return new Grammar;

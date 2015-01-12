@@ -614,6 +614,91 @@ class Builder extends BaseBuilder {
 		return $this;
 	}
 
+	/**
+	 * Elasticsearch query string query.
+	 *
+	 * @param  string $query
+	 * @param  Closure|array|null $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function queryString($query, $parameters = null)
+	{
+		$queryString = $this->newClause('query_string');
+
+		$this->addClauseParameters($queryString, $parameters);
+
+		$queryString->query($query);
+
+		$this->setStatement('query_string', null, $queryString);
+
+		return $this;
+	}
+
+	/**
+	 * Elasticsearch simple query string query.
+	 *
+	 * @param  string $query
+	 * @param  Closure|array|null $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function simpleQueryString($query, $parameters = null)
+	{
+		$simpleQueryString = $this->newClause('simple_query_string');
+
+		$this->addClauseParameters($simpleQueryString, $parameters);
+
+		$simpleQueryString->query($query);
+
+		$this->setStatement('simple_query_string', null, $simpleQueryString);
+
+		return $this;
+	}
+
+	/**
+	 * Elasticsearch regex query.
+	 *
+	 * @param  string $field
+	 * @param  string $value
+	 * @param  Closure|array|null $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function regex($field, $value, $parameters = null)
+	{
+		$regex = $this->newClause('regex');
+
+		$this->addClauseParameters($regex, $parameters);
+
+		$regex->value($value);
+
+		$this->setStatement('regex', $field, $regex);
+
+		return $this;
+	}
+
+	/**
+	 * Elasticsearch terms query.
+	 *
+	 * @param  string $field
+	 * @param  array  $values
+	 * @param  Closure|array|null $parameters
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function terms($field, array $values, $parameters = null)
+	{
+		$terms = $this->newClause('terms');
+
+		$this->addClauseParameters($terms, $parameters);
+
+		//Set the field as a constraint for nesting
+		$terms->addConstraint($field);
+
+		//Add the values
+		$terms->$field($values);
+
+		$this->setStatement('terms', null, $terms);
+
+		return $this;
+	}
 
 	/**
 	 * Elastic range query.
@@ -637,7 +722,7 @@ class Builder extends BaseBuilder {
 	 * Elastic term query.
 	 *
 	 * @param  string       $field
-	 * @param  mixed        $value
+	 * @param  array        $value
 	 * @param  Closure|null $callback
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
@@ -655,9 +740,43 @@ class Builder extends BaseBuilder {
 	}
 
 	/**
+	 * Elastic wildcard query.
+	 *
+	 * @param  string       $field
+	 * @param  mixed        $value
+	 * @param  Closure|null $callback
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function wildcard($field, $value, $parameters = null)
+	{
+		$wildcard = $this->newClause('wildcard');
+
+		$this->addClauseParameters($wildcard, $parameters);
+
+		$wildcard->value($value);
+
+		$this->setStatement('wildcard', $field, $wildcard);
+
+		return $this;
+	}
+
+	/**
+	 * Insert a raw query into the builder.
+	 *
+	 * @param  string $json
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function raw($json)
+	{
+		$this->setStatement('raw', null, $json);
+
+		return $this;
+	}
+
+	/**
 	 * Make a new clause.
 	 *
-	 * @param  string $name
+	 * @param  array|string $name
 	 * @return Tamayo\Stretchy\Query\Clause
 	 */
 	protected function newClause($name)

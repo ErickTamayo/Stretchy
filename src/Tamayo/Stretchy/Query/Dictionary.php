@@ -212,6 +212,51 @@ class Dictionary
 	];
 
 	/**
+	 * Query string query constraints.
+	 *
+	 * @var array
+	 */
+	public static $queryString = [
+		'constraints' => ['query', 'default_field', 'default_operator', 'analyzer', 'allow_leading_wildcard', 'lowercase_expanded_terms', 'enable_position_increments', 'fuzzy_max_expansions', 'fuzziness', 'fuzzy_prefix_length', 'phrase_slop', 'boost', 'analyze_wildcard', 'auto_generate_phrase_queries', 'minimum_should_match', 'lenient', 'locale']
+	];
+
+	/**
+	 * Simple query string query constraints.
+	 *
+	 * @var array
+	 */
+	public static $simpleQueryString = [
+		'constraints' => ['query', 'fields', 'default_operator', 'analyzer', 'flags', 'lowercase_expanded_terms', 'locale', 'lenient']
+	];
+
+	/**
+	 * Regex query constraints.
+	 *
+	 * @var array
+	 */
+	public static $regex = [
+		'constraints' => ['value', 'boost', 'flags']
+	];
+
+	/**
+	 * Terms query constraints.
+	 *
+	 * @var array
+	 */
+	public static $terms = [
+		'constraints' => ['minimum_should_match']
+	];
+
+	/**
+	 * Wildcard query constraints.
+	 *
+	 * @var array
+	 */
+	public static $wildcard = [
+		'constraints' => ['value', 'boost']
+	];
+
+	/**
 	 *  query constraints.
 	 *
 	 * @var array

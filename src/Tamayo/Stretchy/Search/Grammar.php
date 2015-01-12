@@ -52,6 +52,21 @@ class Grammar extends BaseGrammar {
 	}
 
 	/**
+	 * Compile a raw statement.
+	 *
+	 * @param  array $raw
+	 * @return array
+	 */
+	public function compileRaw($raw)
+	{
+		if (is_array($raw['value'])) {
+			return $raw['value'];
+		}
+
+		return json_decode($raw['value']);
+	}
+
+	/**
 	 * Compile single statement.
 	 *
 	 * @param  array $statement

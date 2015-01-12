@@ -162,6 +162,16 @@ class Clause
 	}
 
 	/**
+	 * Add a constraint.
+	 *
+	 * @param string $constraint
+	 */
+	public function addConstraint($constraint)
+	{
+		$this->constraints[] = $constraint;
+	}
+
+	/**
 	 * Add raw constraints.
 	 *
 	 * @param array $constraints

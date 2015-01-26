@@ -1,19 +1,19 @@
-<?php namespace Tamayo\Stretchy\Search;
+<?php namespace Tamayo\Stretchy\Query;
 
 use Closure;
 use Illuminate\Support\Str;
 use Tamayo\Stretchy\Connection;
-use Tamayo\Stretchy\Search\Grammar;
-use Tamayo\Stretchy\Search\Processor;
+use Tamayo\Stretchy\Query\Grammar;
+use Tamayo\Stretchy\Query\Processor;
 use Tamayo\Stretchy\Query\Clause\Factory;
 use Tamayo\Stretchy\Builder as BaseBuilder;
 
 class Builder extends BaseBuilder {
 
 	/**
-	 * Search Processor.
+	 * Query Processor.
 	 *
-	 * @var \Tamayo\Stretchy\Search\Processor
+	 * @var \Tamayo\Stretchy\Query\Processor
 	 */
 	protected $processor;
 
@@ -44,97 +44,6 @@ class Builder extends BaseBuilder {
 	 * @var array
 	 */
 	public $singleStatement;
-
-	/**
-	 * Match constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $match;
-
-	/**
-	 * Multi match constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $multiMatch;
-
-	/**
-	 * Boolean constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $bool;
-
-	/**
-	 * Boosting constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $boosting;
-
-	/**
-	 * Common constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $common;
-
-	/**
-	 * Constant score constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $constantScore;
-
-	/**
-	 * Dis max constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $disMax;
-
-	/**
-	 * Filtered constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $filtered;
-
-	/**
-	 * Fuzzy like this constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $fuzzyLikeThis;
-
-	/**
-	 * Fuzzy like this constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $fuzzyLikeThisField;
-
-	/**
-	 * Fuzzy constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $fuzzy;
-
-	/**
-	 * Range constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $range;
-
-	/**
-	 * Term constraints of the query.
-	 *
-	 * @var array
-	 */
-	public $term;
 
 	/**
 	 * Create a new search builder.
@@ -864,6 +773,16 @@ class Builder extends BaseBuilder {
 	public function getStatements()
 	{
 		return $this->statements;
+	}
+
+	/**
+	 * Execute the search and return the first.
+	 *
+	 * @return array
+	 */
+	public function first()
+	{
+		return $this->size(1)->get();
 	}
 
 	/**

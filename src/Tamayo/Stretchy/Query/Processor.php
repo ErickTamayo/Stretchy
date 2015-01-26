@@ -1,6 +1,6 @@
-<?php namespace Tamayo\Stretchy\Search;
+<?php namespace Tamayo\Stretchy\Query;
 
-use Tamayo\Stretchy\Search\Builder;
+use Tamayo\Stretchy\Query\Builder;
 
 class Processor {
 

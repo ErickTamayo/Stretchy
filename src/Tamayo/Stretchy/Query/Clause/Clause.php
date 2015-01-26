@@ -2,8 +2,7 @@
 
 use Closure;
 use Illuminate\Support\Str;
-use Tamayo\Stretchy\Search\Builder;
-use Tamayo\Stretchy\Query\Dictionary;
+use Tamayo\Stretchy\Query\Builder;
 
 class Clause {
 

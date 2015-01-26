@@ -3,9 +3,9 @@
 use Closure;
 use Illuminate\Support\Str;
 use Tamayo\Stretchy\Connection;
-use Tamayo\Stretchy\Query\Clause;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Processor;
+use Tamayo\Stretchy\Query\Clause\Factory;
 use Tamayo\Stretchy\Builder as BaseBuilder;
 
 class Builder extends BaseBuilder {
@@ -16,6 +16,13 @@ class Builder extends BaseBuilder {
 	 * @var \Tamayo\Stretchy\Search\Processor
 	 */
 	protected $processor;
+
+	/**
+	 * The clause factory instance.
+	 *
+	 * @var \Tamayo\Stretchy\Query\Clause\Factory
+	 */
+	protected $clauseFactory;
 
 	/**
 	 * Indicates if the builder is a subquery.
@@ -135,12 +142,12 @@ class Builder extends BaseBuilder {
 	 * @param \Tamayo\Stretchy\Connection $connection
 	 * @param Grammar                     $grammar
 	 */
-	public function __construct(Connection $connection, Grammar $grammar, Processor $processor, Clause $clause)
+	public function __construct(Connection $connection, Grammar $grammar, Processor $processor, Factory $clauseFactory)
 	{
 		parent::__construct($connection, $grammar);
 
 		$this->processor = $processor;
-		$this->clause    = $clause;
+		$this->clauseFactory = $clauseFactory;
 	}
 
 	/**
@@ -689,9 +696,6 @@ class Builder extends BaseBuilder {
 
 		$this->addClauseParameters($terms, $parameters);
 
-		//Set the field as a constraint for nesting
-		$terms->addConstraint($field);
-
 		//Add the values
 		$terms->$field($values);
 
@@ -777,19 +781,19 @@ class Builder extends BaseBuilder {
 	 * Make a new clause.
 	 *
 	 * @param  array|string $name
-	 * @return Tamayo\Stretchy\Query\Clause
+	 * @return \Tamayo\Stretchy\Query\Clause\Clause
 	 */
 	protected function newClause($name)
 	{
-		return $this->clause->make($name, $this);
+		return $this->clauseFactory->make($name, $this);
 	}
 
 	/**
 	 * Add a parameters to a clause.
 	 *
-	 * @param \Tamayo\Stretchy\Search\Clauses\Clause $clause
+	 * @param \Tamayo\Stretchy\Search\Clause\Clause $clause
 	 * @param Closure|array 						 $parameters
-	 * @return Tamayo\Stretchy\Search\Clauses\Clause
+	 * @return \Tamayo\Stretchy\Search\Clause\Clause
 	 */
 	protected function addClauseParameters(&$clause, $parameters)
 	{
@@ -901,7 +905,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function newInstance()
 	{
-		return new static($this->connection, $this->grammar, $this->processor, $this->clause);
+		return new static($this->connection, $this->grammar, $this->processor, $this->clauseFactory);
 	}
 
 }

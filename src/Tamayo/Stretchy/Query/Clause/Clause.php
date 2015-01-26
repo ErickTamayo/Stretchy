@@ -1,19 +1,11 @@
-<?php namespace Tamayo\Stretchy\Query;
+<?php namespace Tamayo\Stretchy\Query\Clause;
 
 use Closure;
 use Illuminate\Support\Str;
 use Tamayo\Stretchy\Search\Builder;
 use Tamayo\Stretchy\Query\Dictionary;
 
-class Clause
-{
-
-	/**
-	 * The value of the constraints.
-	 *
-	 * @var array
-	 */
-	protected $container = [];
+class Clause {
 
 	/**
 	 * Available constraints for set in the clause.
@@ -44,54 +36,13 @@ class Clause
 	protected $builder;
 
 	/**
-	 * Make a new clause.
-	 *
-	 * @param  string  $type
-	 * @param  Builder $builder
-	 * @return \Tamayo\Stretchy\Query\Clause
-	 */
-	public function make($type, Builder $builder)
-	{
-		$clause = new static;
-
-		$clause->setQueryBuilder($builder);
-		$clause->loadFromDictionary($type);
-
-		return $clause;
-	}
-
-	/**
-	 * Set the query builder.
+	 * Create a new clause.
 	 *
 	 * @param Builder $builder
-	 * @return void
 	 */
-	public function setQueryBuilder(Builder $builder)
+	public function __construct(Builder $builder)
 	{
 		$this->builder = $builder;
-	}
-
-	/**
-	 * Load the constraints from the dictionary.
-	 *
-	 * @param  string $type
-	 * @return void
-	 */
-	public function loadFromDictionary($type)
-	{
-		$type = Str::camel($type);
-
-		$constraints = Dictionary::$$type;
-
-		if (array_key_exists('constraints', $constraints)) {
-			$this->constraints = $constraints['constraints'];
-		}
-		if (array_key_exists('subqueries', $constraints)) {
-			$this->subqueries = $constraints['subqueries'];
-		}
-		if (array_key_exists('subclauses', $constraints)) {
-			$this->subclauses = $constraints['subclauses'];
-		}
 	}
 
 	/**
@@ -105,10 +56,6 @@ class Clause
 		$constraint = Str::snake($method);
 		$value      = $arguments[0];
 		$type 		= $this->constraintType($constraint);
-
-		if (!isset($type)) {
-			throw new \InvalidArgumentException("Unavailable constraint: [{$constraint}]", 1);
-		}
 
 		$this->setConstraint($constraint, $value, $type);
 
@@ -124,21 +71,13 @@ class Clause
 	 */
 	protected function setConstraint($field, $value, $type = 'constraint')
 	{
-		switch ($type) {
-			case 'subclause':
-				$value = $this->createSubclause($this->subclauses[$field], $value);
-				$this->container[] = array_merge(compact('field', 'type'), ['value' => $value]);
-				break;
-
-			case 'subquery':
-				$value = $this->createSubquery($value);
-				$this->container[] = array_merge(compact('field', 'type'), ['value' => $value]);
-				break;
-
-			default:
-				$this->container[] = compact('field', 'value', 'type');
-				break;
+		if ($type == 'subclause') {
+			$value = $this->createSubclause($value);
+		} elseif ($type == 'subquery') {
+			$value = $this->createSubquery($value);
 		}
+
+		$this->constraints[] = compact('field', 'value', 'type');
 	}
 
 	/**
@@ -148,27 +87,7 @@ class Clause
 	 */
 	public function getAffectedConstraints()
 	{
-		return $this->container;
-	}
-
-	/**
-	 * Set constraints for te clause.
-	 *
-	 * @param array $constraints
-	 */
-	public function setConstraints(array $constraints)
-	{
-		$this->constraints = $constraints;
-	}
-
-	/**
-	 * Add a constraint.
-	 *
-	 * @param string $constraint
-	 */
-	public function addConstraint($constraint)
-	{
-		$this->constraints[] = $constraint;
+		return $this->constraints;
 	}
 
 	/**
@@ -180,23 +99,8 @@ class Clause
 	public function addRawConstraints(array $constraints)
 	{
 		foreach ($constraints as $key => $value) {
-			if(! $this->isValidConstraint($key)) {
-				throw new \InvalidArgumentException("Unavailable constraint: [{$key}]", 1);
-			}
-
 			$this->setConstraint($key, $value);
 		}
-	}
-
-	/**
-	 * Checks if a constraint is valid.
-	 *
-	 * @param  string  $name
-	 * @return boolean
-	 */
-	public function isValidConstraint($constraint)
-	{
-		return in_array($constraint, $this->constraints);
 	}
 
 	/**
@@ -205,11 +109,9 @@ class Clause
 	 * @param Closure $callback
 	 * @return \Tamayo\Stretchy\Search\Clauses\Clause
 	 */
-	public function createSubclause(array $constraints, Closure $callback)
+	public function createSubclause(Closure $callback)
 	{
 		$clause = new static($this->builder);
-
-		$clause->setConstraints($constraints);
 
 		$callback($clause);
 
@@ -259,15 +161,13 @@ class Clause
 	 */
 	protected function constraintType($constraint)
 	{
-		if($this->isConstraint($constraint)) {
-			return 'constraint';
-		} elseif ($this->isSubclause($constraint)) {
+		if ($this->isSubclause($constraint)) {
 			return 'subclause';
 		} elseif ($this->isSubquery($constraint)) {
 			return 'subquery';
 		}
 
-		return null;
+		return 'constraint';
 	}
 
 	/**
@@ -287,7 +187,7 @@ class Clause
 	 */
 	protected function isSubclause($constraint)
 	{
-		return in_array($constraint, array_keys($this->subclauses));
+		return in_array($constraint, $this->subclauses);
 	}
 
 	/**

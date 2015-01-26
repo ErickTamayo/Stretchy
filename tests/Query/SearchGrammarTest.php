@@ -1,10 +1,10 @@
 <?php
 
 use Tamayo\Stretchy\Connection;
-use Tamayo\Stretchy\Query\Clause;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Builder;
 use Tamayo\Stretchy\Search\Processor;
+use Tamayo\Stretchy\Query\Clause\Factory;
 
 class SearchGrammarTest extends PHPUnit_Framework_TestCase
 {
@@ -806,13 +806,13 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
 		return new Processor;
 	}
 
-	public function getClause()
+	public function getClauseFactory()
 	{
-		return new Clause;
+		return new Factory;
 	}
 
 	public function getBuilder()
 	{
-		return new Builder($this->getConnection(), $this->getGrammar(), $this->getProcessor(), $this->getClause());
+		return new Builder($this->getConnection(), $this->getGrammar(), $this->getProcessor(), $this->getClauseFactory());
 	}
 }

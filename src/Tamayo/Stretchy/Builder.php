@@ -40,6 +40,20 @@ abstract class Builder {
      */
     public $id;
 
+    /**
+     * Page size.
+     *
+     * @var integer
+     */
+    public $size;
+
+    /**
+     * Skip from.
+     *
+     * @var integer
+     */
+    public $from;
+
 	/**
 	 * Elastic Builder.
 	 *
@@ -91,6 +105,54 @@ abstract class Builder {
 		$this->id = $id;
 
 		return $this;
+	}
+
+	/**
+	 * Elastic search page size.
+	 *
+	 * @param  integer $value
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function size($value)
+	{
+		$this->size = $value;
+
+		return $this;
+	}
+
+	/**
+	 * Elastic search skip from.
+	 *
+	 * @param  integer $value
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function from($value)
+	{
+		$this->from = $value;
+
+		return $this;
+	}
+
+	/**
+	 * From alias.
+	 *
+	 * @param  integer $value
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function offset($value)
+	{
+		return $this->from($value);
+	}
+
+	/**
+	 * Size alias.
+	 *
+	 * @param  integer $value
+	 * @return \Tamayo\Stretchy\Search\Builder
+	 */
+	public function limit($value)
+	{
+		return $this->size($value);
 	}
 
 	/**

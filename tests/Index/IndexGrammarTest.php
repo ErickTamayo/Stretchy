@@ -40,23 +40,6 @@ class IndexGrammarTest extends PHPUnit_Framework_TestCase
 
 	}
 
-	public function testBasicInsert()
-	{
-		$grammar = $this->getGrammar();
-
-		$builder = $this->getBuilder();
-
-		$builder->index = 'foo';
-		$builder->type  = 'bar';
-		$builder->id = 1234;
-
-		$payload = ['tamayo' => 'stretchy'];
-
-		$compiled = $grammar->compileInsert($builder, $payload);
-
-		$this->assertEquals($compiled, ['index'=> 'foo', 'type' => 'bar', 'id' => 1234, 'body' => ['tamayo' => 'stretchy']]);
-	}
-
 	public function testCompileGetSettings()
 	{
 		$grammar = $this->getGrammar();

@@ -1,17 +1,17 @@
-<?php namespace Tamayo\Stretchy\Search;
+<?php namespace Tamayo\Stretchy\Query;
 
 use Illuminate\Support\Str;
-use Tamayo\Stretchy\Search\Builder;
-use Tamayo\Stretchy\Search\Clauses\Clause;
+use Tamayo\Stretchy\Query\Builder;
+use Tamayo\Stretchy\Query\Clauses\Clause;
 use Tamayo\Stretchy\Grammar as BaseGrammar;
 
 
 class Grammar extends BaseGrammar {
 
 	/**
-	 * Compile the search query.
+	 * Compile the query.
 	 *
-	 * @param  \Tamayo\Stretchy\Search\Builder $builder
+	 * @param  \Tamayo\Stretchy\Query\Builder $builder
 	 * @return array
 	 */
 	public function compileSearch(Builder $builder)

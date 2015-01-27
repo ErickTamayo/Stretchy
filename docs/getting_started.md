@@ -14,6 +14,7 @@ Installation
 3. Add the following aliases:
 ```php
 		'Index'    => 'Tamayo\Stretchy\Facades\Index',
+		'Document' => 'Tamayo\Stretchy\Facades\Document'
 		'Stretchy' => 'Tamayo\Stretchy\Facades\Stretchy'
 ```
 
@@ -43,16 +44,34 @@ Index::create('foo', function($index)
 ```php
 Index::delete('foo');
 ```
-####Document Indexing*
+####Document indexing
 ```php
-Index::index('foo')
+Document::index('foo')
     ->type('tweet')
+    ->id(13) // Optional (if not specified elastic will generate an unique id)
     ->insert([
         'username' => '@ericktamayo',
         'tweet'    => 'Hello world!'
     ]);
 ```
-*Subject to change soon
+####Update a document
+```php
+Document::index('foo')
+    ->type('tweet')
+    ->id(13)
+    ->update([
+        'tweet'    => 'Hello world!!!'
+    ]);
+```
+####Get a document
+```php
+Document::index('foo')->type('tweet')->Id(13)->get();
+```
+
+####Delete a document
+```php
+Document::index('foo')->type('tweet')->Id(13)->delete();
+```
 
 ###Searching
 

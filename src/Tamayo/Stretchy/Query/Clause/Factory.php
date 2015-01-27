@@ -2,7 +2,7 @@
 
 use Exception;
 use Illuminate\Support\Str;
-use Tamayo\Stretchy\Search\Builder;
+use Tamayo\Stretchy\Query\Builder;
 
 class Factory {
 	/**

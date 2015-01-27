@@ -66,6 +66,28 @@ class Grammar {
 	}
 
 	/**
+	 * Compile size statement.
+	 *
+	 * @param  Builder $builder
+	 * @return array
+	 */
+	public function compileSize($builder)
+	{
+		return $this->compile('size', $builder->size);
+	}
+
+	/**
+	 * Compile from statement.
+	 *
+	 * @param  Builder $builder
+	 * @return array
+	 */
+	public function compileFrom($builder)
+	{
+		return $this->compile('from', $builder->from);
+	}
+
+	/**
 	 * Compile document id.
 	 *
 	 * @param  Builder $builder
@@ -104,7 +126,9 @@ class Grammar {
 		$compiled = array_merge(
 			$this->compileIndex($builder),
 			$this->compileType($builder),
-			$this->compileId($builder)
+			$this->compileId($builder),
+			$this->compileSize($builder),
+			$this->compileFrom($builder)
 		);
 
 		return $compiled;

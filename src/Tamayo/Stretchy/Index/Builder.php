@@ -64,27 +64,6 @@ class Builder extends BaseBuilder {
 	}
 
 	/**
-	 * Insert a document in the engine.
-	 *
-	 * @param  array  $payload
-	 * @return mixed
-	 */
-	public function insert(array $payload)
-	{
-		if(! $this->indexIsDefined()) {
-			throw new IndexMustBeDefinedException("To perform an insert, you must define an index", 1);
-		}
-
-		if(! $this->typeIsDefined()) {
-			throw new TypeMustBeDefinedException("To perform an insert, you must define a type", 1);
-		}
-
-		$compiled = $this->grammar->compileInsert($this, $payload);
-
-		return $this->processor->processInsert($this, $this->connection->insert($compiled));
-	}
-
-	/**
 	 * Get Settings of indices.
 	 *
 	 * @param  string|array $index

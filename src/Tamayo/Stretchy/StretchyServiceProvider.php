@@ -24,8 +24,9 @@ class StretchyServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
+		$this->app->bind('stretchy.document', 'Tamayo\Stretchy\Document\Builder');
 		$this->app->bind('stretchy.index', 'Tamayo\Stretchy\Index\Builder');
-		$this->app->bind('stretchy.search', 'Tamayo\Stretchy\Search\Builder');
+		$this->app->bind('stretchy.search', 'Tamayo\Stretchy\Query\Builder');
 
 		$this->app->bindShared('Tamayo\Stretchy\Connection', function($app)
 			{

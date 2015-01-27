@@ -87,9 +87,42 @@ class Connection
 	 * @param  array $payload
 	 * @return array
 	 */
-	public function insert($payload)
+	public function documentInsert($payload)
 	{
 		return $this->client->index($payload);
+	}
+
+	/**
+	 * Perform an insertion into the engine.
+	 *
+	 * @param  array $payload
+	 * @return array
+	 */
+	public function documentUpdate($payload)
+	{
+		return $this->client->update($payload);
+	}
+
+	/**
+	 * Perform an insertion into the engine.
+	 *
+	 * @param  array $payload
+	 * @return array
+	 */
+	public function documentDelete($payload)
+	{
+		return $this->client->delete($payload);
+	}
+
+	/**
+	 * Perform an insertion into the engine.
+	 *
+	 * @param  array $payload
+	 * @return array
+	 */
+	public function documentGet($payload)
+	{
+		return $this->client->get($payload);
 	}
 
 	/**

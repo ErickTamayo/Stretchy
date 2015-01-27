@@ -33,22 +33,6 @@ class Grammar extends BaseGrammar {
 	}
 
 	/**
-	 * Compile an insert command.
-	 *
-	 * @param  Builder $builder
-	 * @param  array   $payload
-	 * @return array
-	 */
-	public function compileInsert(Builder $builder, array $payload)
-	{
-		$compiled = $this->compile('body', $payload);
-
-		$compiled = array_merge($this->compileHeader($builder), $compiled);
-
-		return $compiled;
-	}
-
-	/**
 	 * Compile Get Settings.
 	 *
 	 * @param  string|array $indices

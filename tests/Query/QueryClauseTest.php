@@ -6,7 +6,7 @@ class QueryClauseTest extends PHPUnit_Framework_TestCase
 {
 	public function testClause()
 	{
-		$clause = new Clause(Mockery::mock('Tamayo\Stretchy\Search\Builder'));
+		$clause = new Clause(Mockery::mock('Tamayo\Stretchy\Query\Builder'));
 
 		$clause->fooBar('baz');
 

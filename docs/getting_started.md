@@ -59,9 +59,7 @@ Document::index('foo')
 Document::index('foo')
     ->type('tweet')
     ->id(13)
-    ->update([
-        'tweet'    => 'Hello world!!!'
-    ]);
+    ->update(['tweet'    => 'Hello world!!!']);
 ```
 ####Get a document
 ```php

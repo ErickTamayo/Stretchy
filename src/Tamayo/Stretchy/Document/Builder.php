@@ -19,13 +19,6 @@ class Builder extends BaseBuilder {
 	protected $processor;
 
 	/**
-	 * Action to perform.
-	 *
-	 * @var string
-	 */
-	protected $action = 'get';
-
-	/**
 	 * Index Builder.
 	 *
 	 * @param \Tamayo\Stretchy\Connection $connection

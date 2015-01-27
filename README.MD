@@ -32,6 +32,7 @@ The current documentation is at [stretchy.readthedocs.org](http://stretchy.readt
 3. Add the following aliases:
 ```php
 		'Index'    => 'Tamayo\Stretchy\Facades\Index',
+		'Document' => 'Tamayo\Stretchy\Facades\Document',
 		'Stretchy' => 'Tamayo\Stretchy\Facades\Stretchy'
 ```
 
@@ -74,9 +75,7 @@ Document::index('foo')
 Document::index('foo')
     ->type('tweet')
     ->id(13)
-    ->update([
-        'tweet'    => 'Hello world!!!'
-    ]);
+    ->update(['tweet' => 'Hello world!!!']);
 ```
 ####Get a document
 ```php

@@ -17,16 +17,16 @@ class Blueprint {
 	/**
 	 * Shards quantity.
 	 *
-	 * @var
+	 * @var integer
 	 */
-	protected $shards;
+	protected $shards = 2;
 
 	/**
 	 * Replicas quantity.
 	 *
-	 * @var
+	 * @var integer
 	 */
-	protected $replicas;
+	protected $replicas = 0;
 
 	/**
 	 * Index fields.

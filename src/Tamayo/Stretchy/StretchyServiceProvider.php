@@ -42,9 +42,9 @@ class StretchyServiceProvider extends ServiceProvider {
 		$this->app->singleton('Tamayo\Stretchy\Connection', function($app)
 			{
 				return new Connection(
-					$app['config']->get('stretchy::hosts'),
-					$app['config']->get('stretchy::prefix'),
-					$app['config']->get('stretchy::auth')
+					$app['config']->get('stretchy.hosts'),
+					$app['config']->get('stretchy.prefix'),
+					$app['config']->get('stretchy.auth')
 				);
 			});
 	}

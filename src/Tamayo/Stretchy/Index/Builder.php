@@ -37,13 +37,13 @@ class Builder extends BaseBuilder {
 	 * @param  Closure $callback
 	 * @return \Tamayo\Stretchy\Index\Blueprint
 	 */
-	public function create($index, Closure $callback)
+	public function create($index, Closure $callback = null)
 	{
 		$blueprint = $this->createBlueprint($index);
 
 		$blueprint->create();
 
-		$callback($blueprint);
+		if ($callback) $callback($blueprint);
 
 		$this->build($blueprint);
 	}

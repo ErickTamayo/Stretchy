@@ -16,7 +16,6 @@ class Grammar extends BaseGrammar {
 	 */
 	public function compileSearch(Builder $builder)
 	{
-
 		$header = $this->compileHeader($builder);
 
 		$singleStatement = $builder->getSingleStatement();
@@ -76,7 +75,9 @@ class Grammar extends BaseGrammar {
 	{
 		$compiled = array();
 
-		return $this->compile('query', $this->callCompileMethod($statement['type'], $statement));
+		$head = $statement['type'] != 'raw' ? 'query' : null;
+
+		return $this->compile($head, $this->callCompileMethod($statement['type'], $statement));
 	}
 
 	/**

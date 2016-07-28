@@ -758,7 +758,7 @@ class QueryGrammarTest extends PHPUnit_Framework_TestCase
 	{
 		$builder = $this->getBuilder();
 
-		$builder->raw(['match' => ['testField' => 'abc']]);
+		$builder->raw(['query' => ['match' => ['testField' => 'abc']]]);
 
 		$json = $builder->toJson();
 
@@ -769,7 +769,7 @@ class QueryGrammarTest extends PHPUnit_Framework_TestCase
 	{
 		$builder = $this->getBuilder();
 
-		$builder->raw('{"match":{"testField":"abc"}}');
+		$builder->raw('{"query":{"match":{"testField":"abc"}}}');
 
 		$json = $builder->toJson();
 

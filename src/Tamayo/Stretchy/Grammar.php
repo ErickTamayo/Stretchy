@@ -110,15 +110,17 @@ class Grammar {
 	{
 		$compiled = array();
 
-		if (isset($value)) {
+		if ($key != null && $value != null) {
 			$compiled[$key] = $value;
-
-			if (isset($compile)) {
-				$compile[] = $compiled;
-			}
+		} else {
+			$compiled = $value;
 		}
 
-		return $compiled;
+		if (isset($compile)) {
+			$compile[] = $compiled;
+		}
+
+		return $compiled ? : [];
 	}
 
 	public function compileHeader(Builder $builder)
@@ -134,4 +136,3 @@ class Grammar {
 		return $compiled;
 	}
 }
-

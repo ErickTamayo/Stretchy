@@ -136,7 +136,7 @@ class Builder extends BaseBuilder {
 	 * @param  Closure|null $callback
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function matchPhrasePrefix($field, $matching, Closure $callback = null)
+	public function matchPhrasePrefix($field, $matching, $callback = null)
 	{
 		return $this->match($field, $matching, $callback, 'phrase_prefix');
 	}

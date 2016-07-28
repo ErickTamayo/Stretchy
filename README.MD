@@ -2,14 +2,14 @@ Stretchy
 =========
 [![Build Status](https://travis-ci.org/ErickTamayo/Stretchy.svg?branch=master)](https://travis-ci.org/ErickTamayo/Stretchy)
 
-Stretchy in an [Elasticsearch] integration for Laravel.
+Stretchy in an [Elasticsearch] integration for Laravel 5.
 
 Heavily Inspired by Query Builder and Schema of laravel.
 
 Description on going.
 
 ### Version
-0.0.1 (Alpha)
+2.0.0 - Alpha
 
 ### Documentation
 
@@ -19,10 +19,10 @@ The current documentation is at [stretchy.readthedocs.org](http://stretchy.readt
 
 ###Requirements
 
-- PHP 5.4+
+- PHP 5.5.9+
 
 ### Installing with Composer
-1. In your **composer.json**, add the dependency: `"tamayo/stretchy": "dev-master"`
+1. In your **composer.json**, add the dependency: `"tamayo/stretchy": "2.0.0"`
 
 2. Add the Stretchy service provider in your app.config:
 ```php

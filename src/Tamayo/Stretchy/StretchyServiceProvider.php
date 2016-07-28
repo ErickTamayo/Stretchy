@@ -14,7 +14,18 @@ class StretchyServiceProvider extends ServiceProvider {
 
 	public function boot()
 	{
-
+		//Lumen users need to copy the config file over to /config themselves
+        //and it needs to be pulled in with $this->app->configure().
+        if (str_contains($this->app->version(), 'Lumen')) {
+            $this->app->configure('stretchy');
+        }
+        //Laravel users can run artisan config:publish and config will be
+        //automatically read in with directory scanning.
+        else {
+			$this->publishes([
+					__DIR__.'/../config/stretchy.php' => config_path('stretchy.php')
+				], 'config');
+        }
 	}
 
 	/**
@@ -47,5 +58,4 @@ class StretchyServiceProvider extends ServiceProvider {
 	{
 		return array();
 	}
-
 }

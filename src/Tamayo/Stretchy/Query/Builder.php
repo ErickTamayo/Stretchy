@@ -175,7 +175,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function bool(Closure $callback)
 	{
-		$bool = $this->newClause('bool');
+		$bool = $this->newClause('boolean');
 
 		$callback($bool);
 

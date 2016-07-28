@@ -1,6 +1,6 @@
 <?php namespace Tamayo\Stretchy\Query\Clause;
 
-class Bool extends Clause {
+class Boolean extends Clause {
 
 	/**
 	 * Available sub queries in the clause.

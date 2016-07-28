@@ -14,7 +14,7 @@ class StretchyServiceProvider extends ServiceProvider {
 
 	public function boot()
 	{
-		$this->package('tamayo/stretchy');
+
 	}
 
 	/**
@@ -28,7 +28,7 @@ class StretchyServiceProvider extends ServiceProvider {
 		$this->app->bind('stretchy.index', 'Tamayo\Stretchy\Index\Builder');
 		$this->app->bind('stretchy.search', 'Tamayo\Stretchy\Query\Builder');
 
-		$this->app->bindShared('Tamayo\Stretchy\Connection', function($app)
+		$this->app->singleton('Tamayo\Stretchy\Connection', function($app)
 			{
 				return new Connection(
 					$app['config']->get('stretchy::hosts'),

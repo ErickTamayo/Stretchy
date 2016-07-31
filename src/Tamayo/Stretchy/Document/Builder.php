@@ -39,13 +39,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function insert(array $payload)
 	{
-		if(! $this->indexIsDefined()) {
-			throw new IndexMustBeDefinedException("To index a document, index must be definded", 1);
-		}
-
-		if(! $this->typeIsDefined()) {
-			throw new TypeMustBeDefinedException("To index a document, type must be defined", 1);
-		}
+		$this->validate();
 
 		$compiled = $this->grammar->compileInsert($this, $payload);
 
@@ -60,13 +54,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function update(array $payload)
 	{
-		if(! $this->indexIsDefined()) {
-			throw new IndexMustBeDefinedException("To update a document, index must be definded", 1);
-		}
-
-		if(! $this->typeIsDefined()) {
-			throw new TypeMustBeDefinedException("To index a document, type must be defined", 1);
-		}
+		$this->validate();
 
 		$compiled = $this->grammar->compileUpdate($this, $payload);
 
@@ -81,13 +69,7 @@ class Builder extends BaseBuilder {
 	 */
 	public function get()
 	{
-		if(! $this->indexIsDefined()) {
-			throw new IndexMustBeDefinedException("To get a document, index must be definded", 1);
-		}
-
-		if(! $this->typeIsDefined()) {
-			throw new TypeMustBeDefinedException("To get a document, type must be defined", 1);
-		}
+		$this->validate();
 
 		$compiled = $this->grammar->compileGet($this);
 
@@ -106,6 +88,22 @@ class Builder extends BaseBuilder {
 	 */
 	public function delete()
 	{
+		$this->validate();
+
+		$compiled = $this->grammar->compileDelete($this);
+
+		return $this->processor->processDelete($this, $this->connection->documentDelete($compiled));
+	}
+
+	/**
+	 * Check if the builder is valid.
+	 *
+	 * @return void
+	 * @throws \Tamayo\Stretchy\Exceptions\TypeMustBeDefinedException
+	 * @throws \Tamayo\Stretchy\Exceptions\IndexMustBeDefinedException
+	 */
+	private function validate()
+	{
 		if(! $this->indexIsDefined()) {
 			throw new IndexMustBeDefinedException("To delete a document, index must be definded", 1);
 		}
@@ -113,9 +111,5 @@ class Builder extends BaseBuilder {
 		if(! $this->typeIsDefined()) {
 			throw new TypeMustBeDefinedException("To delete a document, type must be defined", 1);
 		}
-
-		$compiled = $this->grammar->compileDelete($this);
-
-		return $this->processor->processDelete($this, $this->connection->documentDelete($compiled));
 	}
 }

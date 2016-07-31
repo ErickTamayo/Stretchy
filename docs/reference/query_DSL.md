@@ -525,12 +525,11 @@ Stretchy::search('foo')->wildcard('user', 'ki*y', ['boost' => 2.0])->get();
 You also can do a raw query by a json or array
 
 ```php
-Stretchy::search('foo')->raw('{"match":{"testField":"abc"}}')->get();
+Stretchy::search('foo')->raw('{"query":{"match":{"testField":"abc"}}}')->get();
 ```
 
 or
 
 ```php
-Stretchy::search('foo')->raw(['match' => ['testField' => 'abc']])->get();
+Stretchy::search('foo')->raw(['query' => ['match' => ['testField' => 'abc']]])->get();
 ```
-

@@ -159,16 +159,8 @@ More examples can be found in the [documentation](http://stretchy.readthedocs.or
 
 ### Roadmap
 - **Documentation**
-- **Index API I(Basic)**
-- **Elastic Query Builder (Search API)**
-- **Leverage Models**
-	- Model traits
-- **PutMapping Wrapper**
-- **Leverage Laravel Migrations**
-	- Migrations with PutMaping
-- **Advanced models and relations**
-	- Search and rebuild model from results and it's relationships
-- **Index API II (Advanced)**
+- **Make the library to be independent from Laravel components**
+- **PutMapping API**
 
 ###Author
 Erick Tamayo - [ericktamayo@gmail.com](mailto:ericktamayo@gmail.com) - [@ericktamayo](http://twitter.com/ericktamayo)

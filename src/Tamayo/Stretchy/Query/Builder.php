@@ -49,7 +49,9 @@ class Builder extends BaseBuilder {
 	 * Create a new search builder.
 	 *
 	 * @param \Tamayo\Stretchy\Connection $connection
-	 * @param Grammar                     $grammar
+	 * @param \Tamayo\Stretchy\Query\Grammar $grammar
+	 * @param \Tamayo\Stretchy\Query\Processor $processor
+	 * @param \Tamayo\Stretchy\Query\Clause\Factory $clauseFactory
 	 */
 	public function __construct(Connection $connection, Grammar $grammar, Processor $processor, Factory $clauseFactory)
 	{
@@ -123,7 +125,7 @@ class Builder extends BaseBuilder {
 	 * @param  Closure|null $callback
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function matchPhrase($field, $matching, Closure $callback = null)
+	public function matchPhrase($field, $matching, $callback = null)
 	{
 		return $this->match($field, $matching, $callback, 'phrase');
 	}
@@ -150,7 +152,7 @@ class Builder extends BaseBuilder {
 	 * @param  string       	  $type
 	 * @return \Tamayo\Stretchy\Search\Builder
 	 */
-	public function multiMatch(array $fields, $matching, Closure $parameters = null, $type = 'best_fields')
+	public function multiMatch(array $fields, $matching, $parameters = null, $type = 'best_fields')
 	{
 		$match = $this->newClause('multi_match');
 

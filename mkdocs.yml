@@ -5,4 +5,4 @@ pages:
 - ['index.md', 'Home']
 - ['getting_started.md', 'Getting Started']
 - ['reference/index_operations.md', 'Reference', 'Index Operations']
-- ['reference/query_dsl.md', 'Reference', 'Query DSL']
+- ['reference/querydsl.md', 'Reference', 'Query DSL']

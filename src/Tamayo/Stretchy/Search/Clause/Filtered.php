@@ -1,6 +1,6 @@
-<?php namespace Tamayo\Stretchy\Query\Clause;
+<?php namespace Tamayo\Stretchy\Search\Clause;
 
-class ConstantScore extends Clause {
+class Filtered extends Clause {
 
 	/**
 	 * Available sub queries in the clause.

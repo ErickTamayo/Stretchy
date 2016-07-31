@@ -1,11 +1,11 @@
-<?php namespace Tamayo\Stretchy\Query;
+<?php namespace Tamayo\Stretchy\Search;
 
 use Closure;
 use Illuminate\Support\Str;
 use Tamayo\Stretchy\Connection;
-use Tamayo\Stretchy\Query\Grammar;
-use Tamayo\Stretchy\Query\Processor;
-use Tamayo\Stretchy\Query\Clause\Factory;
+use Tamayo\Stretchy\Search\Grammar;
+use Tamayo\Stretchy\Search\Processor;
+use Tamayo\Stretchy\Search\Clause\Factory;
 use Tamayo\Stretchy\Builder as BaseBuilder;
 
 class Builder extends BaseBuilder {
@@ -13,14 +13,14 @@ class Builder extends BaseBuilder {
 	/**
 	 * Query Processor.
 	 *
-	 * @var \Tamayo\Stretchy\Query\Processor
+	 * @var \Tamayo\Stretchy\Search\Processor
 	 */
 	protected $processor;
 
 	/**
 	 * The clause factory instance.
 	 *
-	 * @var \Tamayo\Stretchy\Query\Clause\Factory
+	 * @var \Tamayo\Stretchy\Search\Clause\Factory
 	 */
 	protected $clauseFactory;
 
@@ -49,9 +49,9 @@ class Builder extends BaseBuilder {
 	 * Create a new search builder.
 	 *
 	 * @param \Tamayo\Stretchy\Connection $connection
-	 * @param \Tamayo\Stretchy\Query\Grammar $grammar
-	 * @param \Tamayo\Stretchy\Query\Processor $processor
-	 * @param \Tamayo\Stretchy\Query\Clause\Factory $clauseFactory
+	 * @param \Tamayo\Stretchy\Search\Grammar $grammar
+	 * @param \Tamayo\Stretchy\Search\Processor $processor
+	 * @param \Tamayo\Stretchy\Search\Clause\Factory $clauseFactory
 	 */
 	public function __construct(Connection $connection, Grammar $grammar, Processor $processor, Factory $clauseFactory)
 	{

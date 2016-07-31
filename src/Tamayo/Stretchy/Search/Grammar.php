@@ -1,8 +1,8 @@
-<?php namespace Tamayo\Stretchy\Query;
+<?php namespace Tamayo\Stretchy\Search;
 
 use Illuminate\Support\Str;
-use Tamayo\Stretchy\Query\Builder;
-use Tamayo\Stretchy\Query\Clauses\Clause;
+use Tamayo\Stretchy\Search\Builder;
+use Tamayo\Stretchy\Search\Clauses\Clause;
 use Tamayo\Stretchy\Grammar as BaseGrammar;
 
 
@@ -11,7 +11,7 @@ class Grammar extends BaseGrammar {
 	/**
 	 * Compile the query.
 	 *
-	 * @param  \Tamayo\Stretchy\Query\Builder $builder
+	 * @param  \Tamayo\Stretchy\Query\Search $builder
 	 * @return array
 	 */
 	public function compileSearch(Builder $builder)

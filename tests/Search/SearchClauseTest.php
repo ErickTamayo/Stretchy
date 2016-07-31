@@ -1,12 +1,12 @@
 <?php
 
-use Tamayo\Stretchy\Query\Clause\Clause;
+use Tamayo\Stretchy\Search\Clause\Clause;
 
-class QueryClauseTest extends PHPUnit_Framework_TestCase
+class SearchClauseTest extends PHPUnit_Framework_TestCase
 {
 	public function testClause()
 	{
-		$clause = new Clause(Mockery::mock('Tamayo\Stretchy\Query\Builder'));
+		$clause = new Clause(Mockery::mock('Tamayo\Stretchy\Search\Builder'));
 
 		$clause->fooBar('baz');
 

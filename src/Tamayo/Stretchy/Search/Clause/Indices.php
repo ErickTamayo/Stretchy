@@ -1,4 +1,4 @@
-<?php namespace Tamayo\Stretchy\Query\Clause;
+<?php namespace Tamayo\Stretchy\Search\Clause;
 
 class Indices extends Clause {
 

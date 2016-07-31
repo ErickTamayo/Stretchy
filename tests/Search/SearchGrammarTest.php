@@ -1,12 +1,12 @@
 <?php
 
 use Tamayo\Stretchy\Connection;
-use Tamayo\Stretchy\Query\Grammar;
-use Tamayo\Stretchy\Query\Builder;
-use Tamayo\Stretchy\Query\Processor;
-use Tamayo\Stretchy\Query\Clause\Factory;
+use Tamayo\Stretchy\Search\Grammar;
+use Tamayo\Stretchy\Search\Builder;
+use Tamayo\Stretchy\Search\Processor;
+use Tamayo\Stretchy\Search\Clause\Factory;
 
-class QueryGrammarTest extends PHPUnit_Framework_TestCase
+class SearchGrammarTest extends PHPUnit_Framework_TestCase
 {
 
 	public function testSingleMatch()

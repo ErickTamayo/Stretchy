@@ -1,8 +1,8 @@
-<?php namespace Tamayo\Stretchy\Query\Clause;
+<?php namespace Tamayo\Stretchy\Search\Clause;
 
 use Exception;
 use Illuminate\Support\Str;
-use Tamayo\Stretchy\Query\Builder;
+use Tamayo\Stretchy\Search\Builder;
 
 class Factory {
 	/**

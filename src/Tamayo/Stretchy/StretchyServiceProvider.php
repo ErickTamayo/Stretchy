@@ -37,7 +37,7 @@ class StretchyServiceProvider extends ServiceProvider {
 	{
 		$this->app->bind('stretchy.document', 'Tamayo\Stretchy\Document\Builder');
 		$this->app->bind('stretchy.index', 'Tamayo\Stretchy\Index\Builder');
-		$this->app->bind('stretchy.search', 'Tamayo\Stretchy\Query\Builder');
+		$this->app->bind('stretchy.search', 'Tamayo\Stretchy\Search\Builder');
 
 		$this->app->singleton('Tamayo\Stretchy\Connection', function($app)
 			{

@@ -5,828 +5,839 @@ use Illuminate\Support\Str;
 use Tamayo\Stretchy\Connection;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Processor;
-use Tamayo\Stretchy\Search\Clause\Factory;
+use Tamayo\Stretchy\Search\Parameter;
 use Tamayo\Stretchy\Builder as BaseBuilder;
+use Tamayo\Stretchy\Exceptions\QueryNotSupportedException;
 
 class Builder extends BaseBuilder {
 
-	/**
-	 * Query Processor.
-	 *
-	 * @var \Tamayo\Stretchy\Search\Processor
-	 */
-	protected $processor;
-
-	/**
-	 * The clause factory instance.
-	 *
-	 * @var \Tamayo\Stretchy\Search\Clause\Factory
-	 */
-	protected $clauseFactory;
-
-	/**
-	 * Indicates if the builder is a subquery.
-	 *
-	 * @var boolean
-	 */
-	protected $isSubquery = false;
-
-	/**
-	 * Statements set by the builder.
-	 *
-	 * @var array
-	 */
-	protected $statements = [];
-
-	/**
-	 * Single statement constraint.
-	 *
-	 * @var array
-	 */
-	public $singleStatement;
-
-	/**
-	 * Create a new search builder.
-	 *
-	 * @param \Tamayo\Stretchy\Connection $connection
-	 * @param \Tamayo\Stretchy\Search\Grammar $grammar
-	 * @param \Tamayo\Stretchy\Search\Processor $processor
-	 * @param \Tamayo\Stretchy\Search\Clause\Factory $clauseFactory
-	 */
-	public function __construct(Connection $connection, Grammar $grammar, Processor $processor, Factory $clauseFactory)
-	{
-		parent::__construct($connection, $grammar);
-
-		$this->processor = $processor;
-		$this->clauseFactory = $clauseFactory;
-	}
-
-	/**
-	 * Checks if this is a subquery.
-	 *
-	 * @return boolean
-	 */
-	public function isSubquery()
-	{
-		return $this->isSubquery;
-	}
-
-	/**
-	 * Declares the builder as a subquery.
-	 *
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function setSubquery()
-	{
-		$this->isSubquery = true;
-
-		return $this;
-	}
-
-	/**
-	 * Index alias.
-	 *
-	 * @param  string  $index
-	 * @return \Tamayo\Stretchy\Index\Blueprint
-	 */
-	public function search($index)
-	{
-		return $this->index($index);
-	}
-
-	/**
-	 * Elastic Match Query.
-	 *
-	 * @param  string  			  $field
-	 * @param  mixed  			  $value
-	 * @param  Closure|array|null $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function match($field, $matching, $parameters = null, $type = 'boolean')
-	{
-		$match = $this->newClause('match');
-
-		$this->addClauseParameters($match, $parameters);
-
-		$match->query($matching);
-
-		$match->type($type);
-
-		$this->setStatement('match', $field, $match);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic match phrase query.
-	 *
-	 * @param  string  		$field
-	 * @param  mixed   		$value
-	 * @param  Closure|null $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function matchPhrase($field, $matching, $callback = null)
-	{
-		return $this->match($field, $matching, $callback, 'phrase');
-	}
-
-	/**
-	 * Elastic match phrase prefix query.
-	 *
-	 * @param  string       $fiel
-	 * @param  mixed       	$matching
-	 * @param  Closure|null $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function matchPhrasePrefix($field, $matching, $callback = null)
-	{
-		return $this->match($field, $matching, $callback, 'phrase_prefix');
-	}
-
-	/**
-	 * Elastic multi match query.
-	 *
-	 * @param  array        	  $fields
-	 * @param  string       	  $matching
-	 * @param  Closure|array|null $parameters
-	 * @param  string       	  $type
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function multiMatch(array $fields, $matching, $parameters = null, $type = 'best_fields')
-	{
-		$match = $this->newClause('multi_match');
-
-		$this->addClauseParameters($match, $parameters);
-
-		$match->fields($fields);
-
-		$match->query($matching);
-
-		$match->type($type);
-
-		$this->setStatement('multi_match', null, $match);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic bool query.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function bool(Closure $callback)
-	{
-		$bool = $this->newClause('boolean');
-
-		$callback($bool);
-
-		$this->setStatement('bool', null, $bool);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic boosting query.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function boosting(Closure $callback)
-	{
-		$boosting = $this->newClause('boosting');
-
-		$callback($boosting);
-
-		$this->setStatement('boosting', null, $boosting);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic common query.
-	 *
-	 * @param  string       $field
-	 * @param  string       $value
-	 * @param  Closure|null $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function common($field, $value, $parameters = null)
-	{
-		$common = $this->newClause('common');
-
-		$this->addClauseParameters($common, $parameters);
-
-		$common->query($value);
-
-		$this->setStatement('common', $field, $common);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic constant score query.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function constantScore(Closure $callback)
-	{
-		$constantScore = $this->newClause('constant_score');
-
-		$callback($constantScore);
-
-		$this->setStatement('constant_score', null, $constantScore);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic dis max query.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function disMax(Closure $callback)
-	{
-		$disMax = $this->newClause('dis_max');
-
-		$callback($disMax);
-
-		$this->setStatement('dis_max', null, $disMax);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic filtered query.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function filtered(Closure $callback)
-	{
-		$filtered = $this->newClause('filtered');
-
-		$callback($filtered);
-
-		$this->setStatement('filtered', null, $filtered);
-
-		return $this;
-	}
-
-	public function fuzzyLikeThis(array $fields, $value, $parameters = null)
-	{
-		$fuzzyLikeThis = $this->newClause('fuzzy_like_this');
-
-		$this->addClauseParameters($fuzzyLikeThis, $parameters);
-
-		$fuzzyLikeThis->likeText($value);
-
-		$fuzzyLikeThis->fields($fields);
-
-		$this->setStatement('fuzzy_like_this', null, $fuzzyLikeThis);
-
-		return $this;
-	}
-
-	/**
-	 * Fuzzy like this field query.
-	 *
-	 * @param  string 		 $field
-	 * @param  mixed 		 $value
-	 * @param  Closure|array $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function fuzzyLikeThisField($field, $value, $parameters = null)
-	{
-		$fuzzyLikeThisField = $this->newClause('fuzzy_like_this_field');
-
-		$this->addClauseParameters($fuzzyLikeThisField, $parameters);
-
-		$fuzzyLikeThisField->likeText($value);
-
-		$this->setStatement('fuzzy_like_this_field', $field, $fuzzyLikeThisField);
-
-		return $this;
-	}
-
-	/**
-	 * Fuzzy like this field query alias.
-	 *
-	 * @param  string 		 $field
-	 * @param  mixed 		 $value
-	 * @param  Closure|array $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function fltField($field, $value, $parameters = null)
-	{
-		return $this->fuzzyLikeThisField($field, $value, $parameters);
-	}
-
-	/**
-	 * Elastic fuzzy query.
-	 *
-	 * @param  string 	 	 $field
-	 * @param  mixed 		 $value
-	 * @param  Closure|array $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function fuzzy($field, $value, $parameters = null)
-	{
-		$fuzzy = $this->newClause('fuzzy');
-
-		$this->addClauseParameters($fuzzy, $parameters);
-
-		$fuzzy->value($value);
-
-		$this->setStatement('fuzzy', $field, $fuzzy);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic geo shape query.
-	 *
-	 * @param  string 		 $field
-	 * @param  array  		 $coordinates
-	 * @param  Closure|array $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function geoShape($field, array $coordinates, $shape = 'shape', $parameters = null)
-	{
-		$geoShape = $this->newClause('geo_shape');
-
-		if ($shape == 'shape') {
-			$geoShape->shape(function($shape) use ($coordinates, $parameters)
-			{
-				$shape->coordinates($coordinates);
-				$shape->type('envelope');
-
-				$this->addClauseParameters($shape, $parameters);
-			});
-		} elseif ($shape == 'indexed_shape') {
-			$geoShape->indexedShape(function($shape) use ($parameters)
-			{
-				$this->addClauseParameters($shape, $parameters);
-			});
-		} else {
-			throw new \InvalidArgumentException("Invalid shape: [{$shape}]", 1);
-		}
-
-		$this->setStatement('geo_shape', $field, $geoShape);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic has child query.
-	 *
-	 * @param  Closure $query
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function hasChild(Closure $callback)
-	{
-		$hasChild = $this->newClause('has_child');
-
-		$callback($hasChild);
-
-		$this->setStatement('has_child', null, $hasChild);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic has parent query.
-	 *
-	 * @param  Closure $query
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function hasParent(Closure $callback)
-	{
-		$hasParent = $this->newClause('has_parent');
-
-		$callback($hasParent);
-
-		$this->setStatement('has_parent', null, $hasParent);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch ids query.
-	 *
-	 * @param  string|array|null $type
-	 * @param  string|array 	 $values
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function ids($values, $type = null)
-	{
-		$ids = $this->newClause('ids');
-
-		$ids->values($values);
-
-		if (isset($type)) {
-			$ids->type($type);
-		}
-
-		$this->setStatement('ids', null, $ids);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch indices query.
-	 *
-	 * @param  array  $indices
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function indices(array $indices, Closure $callback)
-	{
-		$indices = $this->newClause('indices');
-
-		$callback($indices);
-
-		$this->setStatement('indices', null, $indices);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch match all query.
-	 *
-	 * @param  array  $indices
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function matchAll($parameters = null)
-	{
-		$matchAll = $this->newClause('match_all');
-
-		$this->addClauseParameters($matchAll, $parameters);
-
-		$this->setStatement('match_all', null, $matchAll);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch more like this query.
-	 *
-	 * @param  array  			  $fields
-	 * @param  string 			  $likeText
-	 * @param  Closure|array|null $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function moreLikeThis(array $fields, $likeText, $parameters = null)
-	{
-		$moreLikeThis = $this->newClause('more_like_this');
-
-		$this->addClauseParameters($moreLikeThis, $parameters);
-
-		$moreLikeThis->fields($fields);
-
-		$moreLikeThis->likeText($likeText);
-
-		$this->setStatement('more_like_this', null, $moreLikeThis);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch nested query.
-	 *
-	 * @param  Closure $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function nested(Closure $callback)
-	{
-		$nested = $this->newClause('nested');
-
-		$callback($nested);
-
-		$this->setStatement('nested', null, $nested);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch prefix query.
-	 *
-	 * @param  string $field
-	 * @param  mixed $value
-	 * @param  Closure|array|null $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function prefix($field, $value, $parameters = null)
-	{
-		$prefix = $this->newClause('prefix');
-
-		$this->addClauseParameters($prefix, $parameters);
-
-		$prefix->value($value);
-
-		$this->setStatement('prefix', $field, $prefix);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch query string query.
-	 *
-	 * @param  string $query
-	 * @param  Closure|array|null $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function queryString($query, $parameters = null)
-	{
-		$queryString = $this->newClause('query_string');
-
-		$this->addClauseParameters($queryString, $parameters);
-
-		$queryString->query($query);
-
-		$this->setStatement('query_string', null, $queryString);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch simple query string query.
-	 *
-	 * @param  string $query
-	 * @param  Closure|array|null $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function simpleQueryString($query, $parameters = null)
-	{
-		$simpleQueryString = $this->newClause('simple_query_string');
-
-		$this->addClauseParameters($simpleQueryString, $parameters);
-
-		$simpleQueryString->query($query);
-
-		$this->setStatement('simple_query_string', null, $simpleQueryString);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch regex query.
-	 *
-	 * @param  string $field
-	 * @param  string $value
-	 * @param  Closure|array|null $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function regex($field, $value, $parameters = null)
-	{
-		$regex = $this->newClause('regex');
-
-		$this->addClauseParameters($regex, $parameters);
-
-		$regex->value($value);
-
-		$this->setStatement('regex', $field, $regex);
-
-		return $this;
-	}
-
-	/**
-	 * Elasticsearch terms query.
-	 *
-	 * @param  string $field
-	 * @param  array  $values
-	 * @param  Closure|array|null $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function terms($field, array $values, $parameters = null)
-	{
-		$terms = $this->newClause('terms');
-
-		$this->addClauseParameters($terms, $parameters);
-
-		//Add the values
-		$terms->$field($values);
-
-		$this->setStatement('terms', null, $terms);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic range query.
-	 *
-	 * @param  string $field
-	 * @param  Closure|array $parameters
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function range($field, $parameters)
-	{
-		$range = $this->newClause('range');
-
-		$this->addClauseParameters($range, $parameters);
-
-		$this->setStatement('range', $field, $range);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic term query.
-	 *
-	 * @param  string       $field
-	 * @param  array        $value
-	 * @param  Closure|null $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function term($field, $value, $parameters = null)
-	{
-		$term = $this->newClause('term');
-
-		$this->addClauseParameters($term, $parameters);
-
-		$term->value($value);
-
-		$this->setStatement('term', $field, $term);
-
-		return $this;
-	}
-
-	/**
-	 * Elastic wildcard query.
-	 *
-	 * @param  string       $field
-	 * @param  mixed        $value
-	 * @param  Closure|null $callback
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function wildcard($field, $value, $parameters = null)
-	{
-		$wildcard = $this->newClause('wildcard');
-
-		$this->addClauseParameters($wildcard, $parameters);
-
-		$wildcard->value($value);
-
-		$this->setStatement('wildcard', $field, $wildcard);
-
-		return $this;
-	}
-
-	/**
-	 * Insert a raw query into the builder.
-	 *
-	 * @param  string $json
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function raw($json)
-	{
-		$this->setStatement('raw', null, $json);
-
-		return $this;
-	}
-
-	/**
-	 * Make a new clause.
-	 *
-	 * @param  array|string $name
-	 * @return \Tamayo\Stretchy\Query\Clause\Clause
-	 */
-	protected function newClause($name)
-	{
-		return $this->clauseFactory->make($name, $this);
-	}
-
-	/**
-	 * Add a parameters to a clause.
-	 *
-	 * @param \Tamayo\Stretchy\Search\Clause\Clause $clause
-	 * @param Closure|array 						 $parameters
-	 * @return \Tamayo\Stretchy\Search\Clause\Clause
-	 */
-	protected function addClauseParameters(&$clause, $parameters)
-	{
-		if ($parameters instanceof Closure) {
-			$parameters($clause);
-		}
-		elseif (is_array($parameters)) {
-			$clause->addRawConstraints($parameters);
-		}
-
-		return $clause;
-	}
-
-	/**
-	 * Set a single statement of the builder.
-	 *
-	 * @param string $type
-	 * @param mixed $field
-	 * @param mixed $value
-	 * @return void
-	 */
-	protected function setSingleStatement($type, $field, $value)
-	{
-		$this->singleStatement = ['type' => Str::camel($type), 'field' => $field, 'value' => $value];
-	}
-
-	/**
-	 * Get the single statement of the builder.
-	 *
-	 * @return array
-	 */
-	public function getSingleStatement()
-	{
-		return $this->singleStatement;
-	}
-
-	/**
-	 * Set a statement to the builder.
-	 *
-	 * @param string  $type
-	 * @param mixed   $field
-	 * @param mixed   $value
-	 * @param boolean $single
-	 * @return void
-	 */
-	protected function setStatement($type, $field, $value, $single = true)
-	{
-		if (! $this->isSubquery() && $single) {
-			$this->setSingleStatement($type, $field, $value);
-		} else {
-			$container = Str::camel($type);
-
-			$this->$container = isset($this->$container) ? $this->$container : array();
-
-			$this->$container = array_merge($this->$container, [['field' => $field, 'value' => $value]]);
-
-			if (! in_array($type, $this->statements)) {
-				$this->statements[] = $type;
-			}
-		}
-	}
-
-	/**
-	 * Get the statements set by the builder.
-	 *
-	 * @return array
-	 */
-	public function getStatements()
-	{
-		return $this->statements;
-	}
-
-	/**
-	 * Execute the search and return the first.
-	 *
-	 * @return array
-	 */
-	public function first()
-	{
-		return $this->size(1)->get();
-	}
-
-	/**
-	 * Execute the search.
-	 *
-	 * @return array
-	 */
-	public function get()
-	{
-		$compiled = $this->grammar->compileSearch($this);
-
-		return $this->processor->processSearch($this, $this->connection->search($compiled));
-	}
-
-	/**
-	 * Compile the query to array.
-	 *
-	 * @return array
-	 */
-	public function toArray()
-	{
-		return $this->grammar->compileSearch($this);
-	}
-
-	/**
-	 * Compile the query to json.
-	 *
-	 * @return string
-	 */
-	public function toJson($options = 0)
-	{
-		return json_encode($this->toArray(), $options);
-	}
-
-	/**
-	 * Creates a new instance of the builder.
-	 *
-	 * @return \Tamayo\Stretchy\Search\Builder
-	 */
-	public function newInstance()
-	{
-		return new static($this->connection, $this->grammar, $this->processor, $this->clauseFactory);
-	}
-
+    /**
+     * Query Processor.
+     *
+     * @var \Tamayo\Stretchy\Search\Processor
+     */
+    protected $processor;
+
+    /**
+     * The clause factory instance.
+     *
+     * @var \Tamayo\Stretchy\Search\Clause\Factory
+     */
+    protected $clauseFactory;
+
+    /**
+     * Indicates if this builder is a nested instance.
+     *
+     * @var boolean
+     */
+    protected $nested = false;
+
+    /**
+     * Indicates if this builder queries should be associative or not.
+     *
+     * @var boolean
+     */
+    protected $associative = false;
+
+    /**
+     * Indices to perform the search.
+     *
+     * @var array
+     */
+    public $indices;
+
+    /**
+     * Raw query.
+     *
+     * @var array|string
+     */
+    public $raw = [];
+
+    /**
+     * Query constraints.
+     *
+     * @var array
+     */
+    public $queries = [];
+
+    /**
+     * Filter constraints.
+     *
+     * @var array
+     */
+    public $filters = [];
+
+    /**
+     * Create a new search builder.
+     *
+     * @param \Tamayo\Stretchy\Connection $connection
+     * @param \Tamayo\Stretchy\Search\Grammar $grammar
+     * @param \Tamayo\Stretchy\Search\Processor $processor
+     */
+    public function __construct(Connection $connection, Grammar $grammar, Processor $processor)
+    {
+        parent::__construct($connection, $grammar);
+        $this->processor = $processor;
+    }
+
+    /**
+     * Checks if this is a nested query.
+     *
+     * @return boolean
+     */
+    public function isNested()
+    {
+        return $this->nested;
+    }
+
+    /**
+     * Declares the builder as a nested subquery.
+     *
+     * @param boolean $associative
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function asNested($associative)
+    {
+        $this->nested = true;
+        $this->associative = $associative;
+        return $this;
+    }
+
+    /**
+     * Determines if the current query is single or not.
+     *
+     * @return boolean
+     */
+    public function isSingle()
+    {
+        $count = array_reduce($this->queries, function ($carry, $statement) {
+            return $carry += sizeof($statement);
+        });
+
+        return $count <= 1;
+    }
+
+    /**
+     * Determines if the current query is associative or not.
+     *
+     * @return boolean
+     */
+    public function isAssociative()
+    {
+        return $this->associative;
+    }
+
+    /**
+     * Index alias.
+     *
+     * @param  string  $index
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function search($indices = [])
+    {
+        $this->indices = (array) $indices;
+        return $this;
+    }
+
+    /**
+     * Add a simple key:value statement.
+     *
+     * @param  string $name
+     * @param  array $arguments
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function __call($name, $arguments)
+    {
+        return $this->addQuery(Str::snake($name), ['value' => isset($arguments[0]) ? $arguments[0] : null ]);
+    }
+
+    /**
+     * Match Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function match($field, $value, array $parameters = [], $type = null)
+    {
+        if ($type) {
+            $parameters = array_merge($parameters, ['type' => $type]);
+        }
+
+        return $this->addQuery('match', compact('field', 'value', 'parameters'));
+    }
+
+    /**
+     * match phrase query.
+     *
+     * @param  string       $field
+     * @param  mixed        $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function matchPhrase($field, $value, $parameters = [])
+    {
+        return $this->match($field, $value, $parameters, 'phrase');
+    }
+
+    /**
+     * match phrase prefix query.
+     *
+     * @param  string       $field
+     * @param  mixed        $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function matchPhrasePrefix($field, $value, $parameters = [])
+    {
+        return $this->match($field, $value, $parameters, 'phrase_prefix');
+    }
+
+    /**
+     * multi match query.
+     *
+     * @param  array              $field
+     * @param  string             $value
+     * @param  array|null         $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function multiMatch(array $field, $value, $parameters = [])
+    {
+        return $this->addQuery('multi_match', compact('field', 'value', 'parameters'));
+    }
+
+    /**
+     * bool query.
+     *
+     * @param  Closure $callback
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function bool(Closure $callback)
+    {
+        return $this->addQuery('bool', ['subquery' => $callback], true);
+    }
+
+    /**
+     * Add a should clause to the search query.
+     *
+     * @param Closure|String $clause
+     * @param String $field
+     * @param mixed $value
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function should($clause, $field = null, $value = null, $parameters = [])
+    {
+        return $this->addNamedNestedQuery('should', $clause, $field, $value, $parameters);
+    }
+
+    /**
+     * Add a must clause to the search query.
+     *
+     * @param Closure|String $clause
+     * @param String $field
+     * @param mixed $value
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function must($clause, $field = null, $value = null, $parameters = [])
+    {
+        return $this->addNamedNestedQuery('must', $clause, $field, $value, $parameters);
+    }
+
+    /**
+     * Add a must not clause to the search query.
+     *
+     * @param Closure|String $clause
+     * @param String $field
+     * @param mixed $value
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function mustNot($clause, $field = null, $value = null, $parameters = [])
+    {
+        return $this->addNamedNestedQuery('must_not', $clause, $field, $value, $parameters);
+    }
+
+    /**
+     * boosting query.
+     *
+     * @param  Closure $callback
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function boosting(Closure $callback)
+    {
+        return $this->addQuery('boosting', ['subquery' => $callback], true);
+    }
+
+    /**
+     * Add a positive clause to the search query.
+     *
+     * @param Closure|String $clause
+     * @param String $field
+     * @param mixed $value
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function positive($clause, $field = null, $value = null, $parameters = [])
+    {
+        return $this->addNamedNestedQuery('positive', $clause, $field, $value, $parameters);
+    }
+
+    /**
+     * Add a negative clause to the search query.
+     *
+     * @param Closure|String $clause
+     * @param String $field
+     * @param mixed $value
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function negative($clause, $field = null, $value = null, $parameters = [])
+    {
+        return $this->addNamedNestedQuery('negative', $clause, $field, $value, $parameters);
+    }
+
+    /**
+     * term Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function term($field, $value, $parameters = [])
+    {
+        return $this->addQuery('term', compact('field', 'value', 'parameters'));
+    }
+
+    /**
+     * common Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function common($field, $value, array $parameters = [])
+    {
+        return $this->addQuery('common', compact('field', 'value', 'parameters'));
+    }
+
+    /**
+     * constant score query.
+     *
+     * @param  Closure $callback
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function constantScore(Closure $callback)
+    {
+        return $this->addQuery('constant_score', ['subquery' => $callback], true);
+    }
+
+    /**
+     * dis max score query.
+     *
+     * @param  Closure $callback
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function disMax(Closure $callback)
+    {
+        return $this->addQuery('dis_max', ['subquery' => $callback], true);
+    }
+
+    /**
+     * Add a queries clause to the search query.
+     *
+     * @param Closure|String $clause
+     * @param String $field
+     * @param mixed $value
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function queries($clause, $field = null, $value = null, $parameters = [])
+    {
+        return $this->addNamedNestedQuery('queries', $clause, $field, $value, $parameters);
+    }
+
+    /**
+     * fuzzy Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function fuzzy($field, $value, $parameters = [])
+    {
+        return $this->addQuery('fuzzy', array_merge(compact('field', 'value', 'parameters'), ['query_field_name' => 'value']), false);
+    }
+
+    /**
+     * match all query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function matchAll($parameters = [])
+    {
+        return $this->addQuery('match_all', ['value' => [], 'parameters' => $parameters]);
+    }
+
+    /**
+     * geo shape Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function geoShape($field, $lon1, $lat1, $lon2, $lat2, $relation = 'within')
+    {
+        $parameters = ['field' => $field, 'value' => [[$lon1, $lat1], [$lon2, $lat2]], 'parameters' => ['relation' => $relation ]];
+
+        return $this->bool(function($query) use ($field, $parameters) {
+            $query->must('match_all');
+            $query->filter(function($query) use ($parameters) {
+                $query->addQuery('geo_shape', $parameters);
+            });
+        });
+    }
+
+    /**
+     * geo shape Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function preindexedGeoShape($field, $id, $type, $index, $path)
+    {
+        $parameters = ['field' => $field, 'value' => null, 'parameters' => [
+                'id'             => $id,
+                'type'           => $type,
+                'index'          => $index,
+                'path'           => $path,
+                'indexed_shape'  => true
+            ]
+        ];
+
+        return $this->bool(function($query) use ($field, $parameters) {
+            $query->must('match_all');
+            $query->filter(function($query) use ($parameters) {
+                $query->addQuery('geo_shape', $parameters);
+            });
+        });
+    }
+
+    /**
+     *  has child query.
+     *
+     * @param  string  $type
+     * @param  mixed  $clause
+     * @param  string  $field
+     * @param  mixed  $value
+     * @param  mixed  $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function hasChild($type, $clause, $field = null, $value = null, $parameters = [])
+    {
+        if (! $clause instanceof Closure) {
+            $clause = $this->newSearchNestedQuery()->addNamedNestedQuery('query', $clause, $field, $value, $parameters);
+        }
+
+        return $this->addQuery('has_child', ['parameters' => ['type' => $type], 'subquery' => $clause], true);
+    }
+
+    /**
+     *  has parent query.
+     *
+     * @param  string  $type
+     * @param  mixed  $clause
+     * @param  string  $field
+     * @param  mixed  $value
+     * @param  mixed  $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function hasParent($type, $clause, $field = null, $value = null, $parameters = [])
+    {
+        if (! $clause instanceof Closure) {
+            $clause = $this->newSearchNestedQuery()->addNamedNestedQuery('query', $clause, $field, $value, $parameters);
+        }
+
+        $parameters['parent_type'] = $type;
+
+        return $this->addQuery('has_parent', ['subquery' => $clause, 'parameters' => $parameters], true);
+    }
+
+    /**
+     * Add a query clause to the search query.
+     *
+     * @param Closure|String $clause
+     * @param String $field
+     * @param mixed $value
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function query($clause, $field = null, $value = null, $parameters = [])
+    {
+        return $this->addNamedNestedQuery('query', $clause, $field, $value, $parameters);
+    }
+
+    /**
+     * Add a a no match query clause to the search query.
+     *
+     * @param Closure|String $clause
+     * @param String $field
+     * @param mixed $value
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function noMatchQuery($clause, $field = null, $value = null, $parameters = [])
+    {
+        return $this->addNamedNestedQuery('no_match_query', $clause, $field, $value, $parameters);
+    }
+
+    /**
+     * indices query
+     * @param  array $indices
+     * @param  Closure $query
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function indices(array $indices, Closure $clause)
+    {
+        $this->newSearchNestedQuery()->addNamedNestedQuery('indices', $clause, null, null, null);
+
+        return $this->addQuery('indices', ['subquery' => $clause, 'parameters' => ['indices' => $indices]], true);
+    }
+
+    /**
+     *  ids query.
+     *
+     * @param  string  $type
+     * @param  mixed  $clause
+     * @param  string  $field
+     * @param  mixed  $value
+     * @param  mixed  $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function ids(array $ids, $type = null)
+    {
+        $parameters = ['values' => $ids];
+
+        $parameters = isset($type) ? array_merge($parameters, ['type' => $type]) : $parameters;
+
+        return $this->addQuery('ids', ['parameters' => $parameters]);
+    }
+
+    /**
+     * more like this query.
+     *
+     * @param  array  $fields
+     * @param  string|Closure  $like
+     * @param  array  $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function moreLikeThis(array $fields, $like, $parameters = [])
+    {
+        if ($like instanceof Closure) {
+            $parameters = ['parameters' => array_merge(['fields' => $fields], $parameters), 'subquery' => $like];
+        } else {
+            $parameters = ['parameters' => array_merge(['fields' => $fields, 'like' => $like], $parameters)];
+        }
+
+        return $this->addQuery('more_like_this', $parameters, true);
+    }
+
+    /**
+     * Add a like or unlike clause to the search query.
+     *
+     * @param  string $index
+     * @param  string $type
+     * @param  string|array $idOrDoc
+     * @param string $like
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function likeOrUnlike($index, $type = null, $idOrDoc = null, $like = 'like')
+    {
+        if ($type == null && $idOrDoc == null) {
+            $value = $index;
+        } elseif (is_array($idOrDoc)) {
+            $value =  ['_index' => $index, '_type' => $type, 'doc' => $idOrDoc];
+        } else {
+            $value =  ['_index' => $index, '_type' => $type, '_id' => $idOrDoc];
+        }
+        return $this->addQuery($like, ['value' => $value ]);
+    }
+
+    /**
+     * Add a like clause to the search query.
+     *
+     * @param  string $index
+     * @param  string $type
+     * @param  string|array $idOrDoc
+     * @param string $like
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function like($index, $type = null, $idOrDoc = null, $like = 'like') {
+        return $this->likeOrUnlike($index, $type, $idOrDoc);
+    }
+
+    /**
+     * Add a like or unlike clause to the search query.
+     *
+     * @param  string $index
+     * @param  string $type
+     * @param  string|array $idOrDoc
+     * @param string $like
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function unlike($index, $type = null, $idOrDoc = null, $like = 'like') {
+        return $this->likeOrUnlike($index, $type, $idOrDoc, 'unlike');
+    }
+
+    /**
+     * Nested query.
+     *
+     * @param  string  $path
+     * @param  string  $scoreMode
+     * @param  Closure $callback
+     * @return \Tamayo\Strethy\Search\builder
+     */
+    public function nested($path, $scoreMode, Closure $callback)
+    {
+        return $this->addQuery('nested', ['subquery' => $callback, 'parameters' => ['path' => $path, 'score_mode' => $scoreMode]], true);
+    }
+
+    /**
+     * Add a bool type nested statement to the builder.
+     *
+     * @param string $type
+     * @param string $clause
+     * @param string $field
+     * @param mixed $value
+     * @param array|null $parameters
+     */
+    public function addNamedNestedQuery($name, $clause, $field = null, $value = null, $parameters = [])
+    {
+        $subquery = $this->newSearchNestedQuery();
+
+        // If is a closure we asume the developer wants to add more than one
+        // statement to the clause
+        if ($clause instanceof Closure) {
+            $clause($subquery);
+            return $this->addQuery($name, ['field' => $field, 'value' => $value, 'parameters' => $parameters, 'subquery' => $subquery]);
+        } else {
+            call_user_func_array([$subquery, $clause], [$field, $value, $parameters]);
+            return $this->addQuery($name, ['subquery' => $subquery]);
+        }
+    }
+
+    /**
+     * Prefix Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function prefix($field, $value, $parameters = [])
+    {
+        return $this->addQuery('prefix', ['field' => $field, 'value' => $value, 'parameters' => $parameters, 'query_field_name' => 'prefix']);
+    }
+
+    /**
+     * Regexp Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function regexp($field, $value, $parameters = [])
+    {
+        return $this->addQuery('regexp', ['field' => $field, 'value' => $value, 'parameters' => $parameters, 'query_field_name' => 'value']);
+    }
+
+    /**
+     * Range Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function range($field, $value)
+    {
+        return $this->addQuery('range', ['field' => $field, 'value' => $value, 'parameters' => []]);
+    }
+
+    /**
+     * Filter compound query.
+     *
+     * @todo Fix this to compile corretly as a filter, see geo shape query
+     * @param  Closure $callback
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function filter(Closure $callback)
+    {
+        return $this->addQuery('filter', ['subquery' => $callback], true);
+    }
+
+    /**
+     * Terms Query.
+     *
+     * @param  string             $field
+     * @param  mixed              $value
+     * @param  array|null $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function terms($field, $value)
+    {
+        return $this->addQuery('terms', compact('field', 'value'));
+    }
+
+    /**
+     * query_string Query.
+     *
+     * @param  mixed $defaultFieldOrFields
+     * @param  string $query
+     * @param  array $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function queryString($defaultFieldOrFields, $query, array $parameters = [])
+    {
+        $queryFieldName = is_array($defaultFieldOrFields) ? 'fields' : 'default_field';
+
+        $parameters = array_merge($parameters, [$queryFieldName => $defaultFieldOrFields, 'query' => $query ]);
+
+        return $this->addQuery('query_string', ['field' => null, 'value' => null, 'parameters' => $parameters]);
+    }
+
+
+
+    /**
+     * query_string Query.
+     *
+     * @param  mixed $defaultFieldOrFields
+     * @param  string $query
+     * @param  array $parameters
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function queryString($defaultFieldOrFields, $query, array $parameters = [])
+    {
+        $queryFieldName = is_array($defaultFieldOrFields) ? 'fields' : 'default_field';
+
+        $parameters = array_merge($parameters, [$queryFieldName => $defaultFieldOrFields, 'query' => $query ]);
+
+        return $this->addQuery('query_string', ['field' => null, 'value' => null, 'parameters' => $parameters]);
+    }
+
+    /**
+     * Add a query statement to the Builder.
+     *
+     * @param string $type
+     * @param array $parameters
+     * @param boolean $associative
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function addQuery($type, $parameters = [], $associative = false, $append = false)
+    {
+        if(! Parameter::isValid($type)) {
+            throw new QueryNotSupportedException("Query [{$type}] is not supported", 1);
+        }
+
+        // Check if subquery is a closure to convert it to a real subquery
+        if (isset($parameters['subquery']) and $parameters['subquery'] instanceof Closure) {
+            $subquery = $this->newSearchNestedQuery($associative);
+            call_user_func($parameters['subquery'], $subquery);
+            $parameters['subquery'] = $subquery;
+        }
+
+        $this->queries[$type][] = $parameters;
+
+        return $this;
+    }
+
+    /**
+     * Get a new instance of the Builder.
+     *
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function newSearchQuery()
+    {
+        return new static($this->connection, $this->grammar, $this->processor);
+    }
+
+    /**
+     * Get a new instance of the Builder and set as nested.
+     *
+     * @param boolean $associative
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function newSearchNestedQuery($associative = false)
+    {
+        return $this->newSearchQuery()->asNested($associative);
+    }
+
+    /**
+     * Insert a raw query into the builder.
+     *
+     * @param  array|string $raw
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function raw($raw)
+    {
+        $this->raw = $raw;
+
+        return $this;
+    }
+
+    /**
+     * Execute the search and return the first.
+     *
+     * @return array
+     */
+    public function first()
+    {
+        return $this->size(1)->get();
+    }
+
+    /**
+     * Execute the search.
+     *
+     * @return array
+     */
+    public function get()
+    {
+        $compiled = $this->grammar->compileSearch($this);
+
+        return $this->processor->processSearch($this, $this->connection->search($compiled));
+    }
+
+    /**
+     * Compile the query to array.
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->grammar->compileSearch($this);
+    }
+
+    /**
+     * Compile the query to json.
+     *
+     * @return string
+     */
+    public function toJson($options = 0)
+    {
+        return json_encode($this->toArray(), $options);
+    }
+
+    /**
+     * Creates a new instance of the builder.
+     *
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function newInstance()
+    {
+        return new static($this->connection, $this->grammar, $this->processor);
+    }
 }

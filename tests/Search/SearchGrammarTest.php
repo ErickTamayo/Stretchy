@@ -4,815 +4,431 @@ use Tamayo\Stretchy\Connection;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Builder;
 use Tamayo\Stretchy\Search\Processor;
-use Tamayo\Stretchy\Search\Clause\Factory;
 
 class SearchGrammarTest extends PHPUnit_Framework_TestCase
 {
 
-	public function testSingleMatch()
-	{
-		$builder = $this->getBuilder();
+    public function testBilderIndices()
+    {
+        $builder = $this->getBuilder();
 
-		$builder->match('foo', 'bar', function($match)
-		{
-			$match->operator('and');
-			$match->zeroTermsQuery('all');
-			$match->cutoffFrequency(0.001);
-			$match->lenient(true);
-		});
+        $this->assertEquals('{"index":"*"}', $builder->toJson());
 
-		$json = $builder->toJson();
+        $builder->search('foo');
 
-		$this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"operator":"and","zero_terms_query":"all","cutoff_frequency":0.001,"lenient":true,"query":"bar","type":"boolean"}}}}}', $json);
-	}
+        $this->assertEquals('{"index":"foo"}', $builder->toJson());
 
-	public function testSingleMatchPhrase()
-	{
-		$builder = $this->getBuilder();
+        $builder->search(['foo', 'bar']);
 
-		$builder->matchPhrase('foo', 'bar');
+        $this->assertEquals('{"index":"foo,bar"}', $builder->toJson());
+    }
 
-		$json = $builder->toJson();
+    public function testMatch()
+    {
+        $builder = $this->getBuilder();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"query":"bar","type":"phrase"}}}}}', $json);
-	}
+        $builder->match('foo', 'bar');
 
-	public function testSingleMatchPhrasePrefix()
-	{
-		$builder = $this->getBuilder();
+        $this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":"bar"}}}}', $builder->toJson());
+    }
 
-		$builder->matchPhrasePrefix('foo', 'bar');
+    public function testMatchPhrase()
+    {
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->matchPhrase('foo', 'bar');
 
-		$this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"query":"bar","type":"phrase_prefix"}}}}}', $json);
-	}
+        $this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"query":"bar","type":"phrase"}}}}}', $builder->toJson());
+    }
 
-	public function testSingleMultiMatch()
-	{
-		$builder = $this->getBuilder();
+    public function testMatchPhrasePrefix()
+    {
+        $builder = $this->getBuilder();
 
-		$builder->multiMatch(['foo', 'bar'], 'baz');
+        $builder->matchPhrasePrefix('foo', 'bar');
 
-		$json = $builder->toJson();
+        $this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":{"query":"bar","type":"phrase_prefix"}}}}}', $builder->toJson());
+    }
 
-		$this->assertEquals('{"index":"*","body":{"query":{"multi_match":{"fields":["foo","bar"],"query":"baz","type":"best_fields"}}}}', $json);
-	}
+    public function testSingleMultiMatch()
+    {
+        $builder = $this->getBuilder();
 
-	public function testSingleBoolWithNestedMatch()
-	{
-		$builder = $this->getBuilder();
+        $builder->multiMatch(['foo', 'bar'], 'baz');
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->match('foo', 'bar');
-			});
+        $this->assertEquals('{"index":"*","body":{"query":{"multi_match":{"query":"baz","fields":["foo","bar"]}}}}', $builder->toJson());
 
-			$query->mustNot(function($mustNot)
-			{
-				$mustNot->match('foo', 'baz');
-			});
+        $builder = $this->getBuilder();
 
-			$query->should(function($should)
-			{
-				$should->match('foo', 'bah');
-				$should->match('foo', 'qux');
-			});
+        $builder->multiMatch(['foo', 'bar'], 'baz', ['tie_breaker' => 0.3]);
 
-			$query->minimumShouldMatch(1);
-		});
+        $this->assertEquals('{"index":"*","body":{"query":{"multi_match":{"query":"baz","fields":["foo","bar"],"tie_breaker":0.3}}}}', $builder->toJson());
+    }
 
-		$json = $builder->toJson();
+    public function testBool()
+    {
+        $builder = $this->getBuilder();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"should":[{"match":{"foo":{"query":"bah","type":"boolean"}}},{"match":{"foo":{"query":"qux","type":"boolean"}}}],"must_not":{"match":{"foo":{"query":"baz","type":"boolean"}}},"must":{"match":{"foo":{"query":"bar","type":"boolean"}}},"minimum_should_match":1}}}}', $json);
-	}
+        $builder->bool(function($query)
+        {
+            $query->must(function($must)
+            {
+                $must->match('foo', 'bar');
+            });
 
-	public function testNestedBool()
-	{
-		$builder = $this->getBuilder();
+            $query->mustNot(function($mustNot)
+            {
+                $mustNot->match('foo', 'baz');
+            });
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->match('foo', 'bar');
+            $query->should(function($should)
+            {
+                $should->match('foo', 'bah');
+                $should->match('foo', 'qux');
+            });
 
-				$must->bool(function($subQuery)
-				{
-					$subQuery->must(function($must)
-					{
-						$must->match('foo', 'baz');
-					});
+            $query->minimumShouldMatch(1);
+            $query->boost(3);
+        });
 
-					$subQuery->boost(1.0);
-				});
-			});
+        $json = json_decode( '{"index":"*","body":{"query":{"bool":{"should":[{"match":{"foo":"bah"}},{"match":{"foo":"qux"}}],"must":{"match":{"foo":"bar"}},"must_not":{"match":{"foo":"baz"}},"minimum_should_match":1,"boost":3}}}}', true);
 
-			$query->minimumShouldMatch(1);
-		});
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":[{"match":{"foo":{"query":"bar","type":"boolean"}}},{"bool":{"must":{"match":{"foo":{"query":"baz","type":"boolean"}}},"boost":1}}],"minimum_should_match":1}}}}', $json);
-	}
-
-	public function testSingleBoosting()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->boosting(function($query)
-		{
-			$query->positive(function($positive)
-			{
-				$positive->match('bar', 'baz');
-			});
+        $this->assertEquals($json, $builder->toArray(), '', $delta = 0.0, $maxDepth = 10, $canonicalize = true);
 
-			$query->negative(function($negative)
-			{
-				$negative->match('bar', 'bah');
-			});
+        $builder = $this->getBuilder();
 
-			$query->negativeBoost(0.2);
-		});
+        $builder->bool(function($query)
+        {
+            $query->must('match', 'foo', 'bar')
+                ->mustNot('match', 'foo', 'baz')
+                ->should('match', 'foo', 'bah', ['zero_terms_query' => 'all'])
+                ->minimumShouldMatch(2)
+                ->boost(4);
+        });
 
-		$json = $builder->toJson();
+        $json = json_decode('{"index":"*","body":{"query":{"bool":{"should":{"match":{"foo":{"query":"bah","zero_terms_query":"all"}}},"must":{"match":{"foo":"bar"}},"must_not":{"match":{"foo":"baz"}},"minimum_should_match":2,"boost":4}}}}', true);
 
-		$this->assertEquals('{"index":"*","body":{"query":{"boosting":{"negative":{"match":{"bar":{"query":"bah","type":"boolean"}}},"positive":{"match":{"bar":{"query":"baz","type":"boolean"}}},"negative_boost":0.2}}}}', $json);
-	}
+        $this->assertEquals($json, $builder->toArray(), '', $delta = 0.0, $maxDepth = 10, $canonicalize = true);
+    }
 
-	public function testNestedBoosting()
-	{
-		$builder = $this->getBuilder();
+    public function testBoosting()
+    {
+        $builder = $this->getBuilder();
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->boosting(function($query)
-				{
-					$query->positive(function($positive)
-					{
-						$positive->match('bar', 'baz');
-					});
+        $builder->boosting(function($query)
+        {
+            $query->positive(function($positive)
+            {
+                $positive->match('bar', 'baz');
+            });
 
-					$query->negative(function($negative)
-					{
-						$negative->match('bar', 'bah');
-					});
+            $query->negative(function($negative)
+            {
+                $negative->match('bar', 'bah');
+            });
 
-					$query->negativeBoost(0.2);
-				});
-			});
+            $query->negativeBoost(0.2);
+        });
 
-		});
+        $this->assertEquals('{"index":"*","body":{"query":{"boosting":{"positive":{"match":{"bar":"baz"}},"negative":{"match":{"bar":"bah"}},"negative_boost":0.2}}}}', $builder->toJson());
+    }
 
-		$json = $builder->toJson();
+    public function testCommonTerms()
+    {
+        $builder = $this->getBuilder();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"boosting":{"negative":{"match":{"bar":{"query":"bah","type":"boolean"}}},"positive":{"match":{"bar":{"query":"baz","type":"boolean"}}},"negative_boost":0.2}}}}}}',$json);
-	}
+        $builder->common('bar', 'The brown fox', ['cutoff_frequency' => 0.001, 'minimum_should_match' => ['low_freq' => 2, 'high_freq' => 3]]);
 
-	public function testSingleCommonTerms()
-	{
-		$builder = $this->getBuilder();
+        $json = $builder->toJson();
 
-		$builder->common('foo', 'bar', function($query)
-		{
-			$query->cutoffFrequency(0.001);
+        $this->assertEquals('{"index":"*","body":{"query":{"common":{"bar":{"query":"The brown fox","cutoff_frequency":0.001,"minimum_should_match":{"low_freq":2,"high_freq":3}}}}}}', $builder->toJson());
+    }
 
-			$query->minimumShouldMatch(function($minimumShouldMatch)
-			{
-				$minimumShouldMatch->lowFreq(2);
-				$minimumShouldMatch->highFreq(3);
-			});
-		});
+    public function testConstantScore()
+    {
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->constantScore(function($constantScore)
+        {
+            $constantScore->filter(function($filter)
+            {
+                $filter->term('foo', 'bar');
+            });
+        });
 
-		$this->assertEquals('{"index":"*","body":{"query":{"common":{"foo":{"minimum_should_match":{"low_freq":2,"high_freq":3},"cutoff_frequency":0.001,"query":"bar"}}}}}', $json);
-	}
+        $this->assertEquals('{"index":"*","body":{"query":{"constant_score":{"filter":{"term":{"foo":"bar"}}}}}}', $builder->toJson());
+    }
 
-	public function testNestedCommonTerms()
-	{
-		$builder = $this->getBuilder();
+    public function testDisMax()
+    {
+        $builder = $this->getBuilder();
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->common('foo', 'bar', function($query)
-				{
-					$query->cutoffFrequency(0.001);
+        $builder->disMax(function($disMax) {
+            $disMax->tieBreaker(0.7);
+            $disMax->boost(1.2);
 
-					$query->minimumShouldMatch(function($minimumShouldMatch)
-					{
-						$minimumShouldMatch->lowFreq(2);
-						$minimumShouldMatch->highFreq(3);
-					});
-				});
-			});
-		});
+            $disMax->queries(function($queries) {
+                $queries->term('age', 34);
+                $queries->term('age', 35);
+            });
+        });
 
-		$json = $builder->toJson();
+        $json = json_decode('{"index":"*","body":{"query":{"dis_max":{"boost":1.2,"tie_breaker":0.7,"queries":[{"term":{"age":34}},{"term":{"age":35}}]}}}}',true);
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"common":{"foo":{"minimum_should_match":{"low_freq":2,"high_freq":3},"cutoff_frequency":0.001,"query":"bar"}}}}}}}', $json);
-	}
+        $this->assertEquals($json, $builder->toArray(), '', $delta = 0.0, $maxDepth = 10, $canonicalize = true);
+    }
 
-	public function testSingleGeoShape()
-	{
-		$builder = $this->getBuilder();
+    public function testSingleFuzzy()
+    {
+        $builder = $this->getBuilder();
 
-		$builder->geoShape('location', [[13, 53],[14, 52]]);
+        $builder->fuzzy('price', 12, ['fuzziness' => 2]);
 
-		$json = $builder->toJson();
+        $this->assertEquals('{"index":"*","body":{"query":{"fuzzy":{"price":{"value":12,"fuzziness":2}}}}}', $builder->toJson());
+    }
 
-		$this->assertEquals('{"index":"*","body":{"query":{"geo_shape":{"location":{"shape":{"coordinates":[[13,53],[14,52]],"type":"envelope"}}}}}}', $json);
-	}
+    public function testSingleGeo()
+    {
+        $builder = $this->getBuilder();
 
-	public function testSingleGeoShapeIndexedShape()
-	{
-		$builder = $this->getBuilder();
+        $builder->geoShape('location', 13, 53, 14, 52);
 
-		$builder->geoShape('location', [], 'indexed_shape', ['id' => 'DEU', 'type'=> 'countries', 'index'=> 'shapes', 'path'=> 'location']);
+        $this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"match_all":{}},"filter":{"geo_shape":{"location":{"shape":{"type":"envelope","coordinates":[[13,53],[14,52]]},"relation":"within"}}}}}}}', $builder->toJson());
+    }
 
-		$json = $builder->toJson();
+    public function testPreindexedGeoShape()
+    {
+        $builder = $this->getBuilder();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"geo_shape":{"location":{"indexed_shape":{"id":"DEU","type":"countries","index":"shapes","path":"location"}}}}}}', $json);
-	}
+        $builder->preindexedGeoShape('location', 'DEU', 'countries', 'shapes', 'location');
 
-	public function testNestedGeoShape()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->geoShape('location', [[13, 53],[14, 52]]);
-			});
-		});
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"geo_shape":{"location":{"shape":{"coordinates":[[13,53],[14,52]],"type":"envelope"}}}}}}}}', $json);
-	}
-
-	public function testSingleTerm()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->term('foo', 'bar', function($term)
-		{
-			$term->boost(2);
-		});
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"term":{"foo":{"boost":2,"value":"bar"}}}}}', $json);
-	}
-
-	public function testNestedTerm()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->term('foo', 'bar', ['boost' => 2]);
-			});
-		});
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"term":{"foo":{"boost":2,"value":"bar"}}}}}}}', $json);
-	}
-
-	public function testConstantScore()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->constantScore(function($constantScore)
-		{
-			$constantScore->filter(function($filter)
-			{
-				$filter->term('foo', 'bar');
-			});
-		});
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"constant_score":{"filter":{"term":{"foo":{"value":"bar"}}}}}}}', $json);
-	}
-
-	public function testDisMax()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->disMax(function($disMax)
-		{
-			$disMax->tieBreaker(0.7);
-			$disMax->boost(1.2);
-
-			$disMax->queries(function($queries)
-			{
-				$queries->term('age', 34);
-				$queries->term('age', 35);
-			});
-		});
+        $this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"match_all":{}},"filter":{"geo_shape":{"location":{"indexed_shape":{"id":"DEU","type":"countries","index":"shapes","path":"location"}}}}}}}}', $builder->toJson());
+    }
 
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"dis_max":{"queries":[{"term":{"age":{"value":34}}},{"term":{"age":{"value":35}}}],"tie_breaker":0.7,"boost":1.2}}}}', $json);
-	}
-
-	public function testNestedDisMax()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->disMax(function($disMax)
-				{
-					$disMax->tieBreaker(0.7);
-					$disMax->boost(1.2);
-
-					$disMax->queries(function($queries)
-					{
-						$queries->term('age', 34);
-						$queries->term('age', 35);
-					});
-				});
-			});
-		});
+    public function testHasChild()
+    {
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->hasChild('blog_tag', function ($query) {
+            $query->scoreMode('sum');
+            $query->minChildren(2);
+            $query->maxChildren(10);
+            $query->query('term', 'tag', 'something');
+        });
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"dis_max":{"queries":[{"term":{"age":{"value":34}}},{"term":{"age":{"value":35}}}],"tie_breaker":0.7,"boost":1.2}}}}}}', $json);
-	}
+        $json = json_decode('{"index":"*","body":{"query":{"has_child":{"type":"blog_tag","score_mode":"sum","min_children":2,"max_children":10,"query":{"term":{"tag":"something"}}}}}}', true);
 
-	public function testSingleFiltered()
-	{
-		$builder = $this->getBuilder();
+        $this->assertEquals($json, $builder->toArray(), '', $delta = 0.0, $maxDepth = 10, $canonicalize = true);
 
-		$builder->filtered(function($filtered)
-		{
-			$filtered->query(function($query)
-			{
-				$query->match('bar', 'baz');
-			});
+        $builder = $this->getBuilder();
 
-			$filtered->filter(function($filter)
-			{
-				$filter->range('created', ['gte' => 'now - 1d / d']);
-			});
+        $builder->hasChild('blog_tag', 'term', 'tag', 'something', ['boost' => 2.0]);
 
-		});
+        $json = json_decode('{"index":"*","body":{"query":{"has_child":{"type":"blog_tag","query":{"term":{"tag":{"query":"something","boost":2}}}}}}}', true);
 
-		$json = $builder->toJson();
+        $this->assertEquals($json , $builder->toArray(), '', $delta = 0.0, $maxDepth = 10, $canonicalize = true);
+    }
 
-		$this->assertEquals('{"index":"*","body":{"query":{"filtered":{"filter":{"range":{"created":{"gte":"now - 1d \/ d"}}},"query":{"match":{"bar":{"query":"baz","type":"boolean"}}}}}}}', $json);
-	}
+    public function testHasParent()
+    {
+        $builder = $this->getBuilder();
 
-	public function testNestedFiltered()
-	{
-		$builder = $this->getBuilder();
+        $builder->hasParent('blog', function ($query) {
+            $query->scoreMode('score');
+            $query->query('term', 'tag', 'something');
+        });
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->filtered(function($filtered)
-				{
-					$filtered->query(function($query)
-					{
-						$query->match('bar', 'baz');
-					});
+        $json = json_decode('{"index":"*","body":{"query":{"has_parent":{"parent_type":"blog","score_mode":"score","query":{"term":{"tag":"something"}}}}}}', true);
 
-					$filtered->filter(function($filter)
-					{
-						$filter->range('created', ['gte' => 'now - 1d / d']);
-					});
+        $this->assertEquals($json, $builder->toArray(), '', $delta = 0.0, $maxDepth = 10, $canonicalize = true);
 
-				});
-			});
-		});
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->hasParent('actor', 'term', 'tag', 'something');
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"filtered":{"filter":{"range":{"created":{"gte":"now - 1d \/ d"}}},"query":{"match":{"bar":{"query":"baz","type":"boolean"}}}}}}}}}', $json);
-	}
+        $json = json_decode('{"index":"*","body":{"query":{"has_parent":{"parent_type":"actor","query":{"term":{"tag":"something"}}}}}}', true);
 
-	public function testSingleRange()
-	{
-		$builder = $this->getBuilder();
+        $this->assertEquals($json, $builder->toArray(), '', $delta = 0.0, $maxDepth = 10, $canonicalize = true);
+    }
 
-		$builder->range('created', ['gte' => 'now - 1d / d']);
+    public function testIds()
+    {
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->ids([2, 100], 'my_type');
 
-		$this->assertEquals('{"index":"*","body":{"query":{"range":{"created":{"gte":"now - 1d \/ d"}}}}}', $json);
-	}
+        $json = $builder->toJson();
 
-	public function testNestedRange()
-	{
-		$builder = $this->getBuilder();
+        $this->assertEquals('{"index":"*","body":{"query":{"ids":{"values":[2,100],"type":"my_type"}}}}', $json);
+    }
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->range('created', ['gte' => 'now - 1d / d']);
-			});
-		});
+    public function testIndices()
+    {
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->indices(['index1', 'index2'], function($indices)
+        {
+            $indices->query(function($query)
+            {
+                $query->term('tag', 'wow');
+            });
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"range":{"created":{"gte":"now - 1d \/ d"}}}}}}}', $json);
-	}
+            $indices->noMatchQuery(function($noMatchQuery)
+            {
+                $noMatchQuery->term('tag', 'kow');
+            });
+        });
 
-	public function testSingleFuzzyLikeThis()
-	{
-		$builder = $this->getBuilder();
+        $this->assertEquals('{"index":"*","body":{"query":{"indices":{"indices":["index1","index2"],"query":{"term":{"tag":"wow"}},"no_match_query":{"term":{"tag":"kow"}}}}}}', $builder->toJson());
+    }
 
-		$builder->fuzzyLikeThis(['bar', 'baz'], 'text like this one', ['fuzziness' => 1.5]);
+    public function testMatchAll()
+    {
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->matchAll();
 
-		$this->assertEquals('{"index":"*","body":{"query":{"fuzzy_like_this":{"fuzziness":1.5,"like_text":"text like this one","fields":["bar","baz"]}}}}', $json);
-	}
+        $json = $builder->toJson();
 
-	public function testNestedFuzzyLikeThis()
-	{
-		$builder = $this->getBuilder();
+        $this->assertEquals('{"index":"*","body":{"query":{"match_all":{}}}}', $json);
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->fuzzyLikeThis(['bar', 'baz'], 'text like this one', ['fuzziness' => 1.5]);
-			});
-		});
+        $builder = $builder->newInstance();
 
-		$json = $builder->toJson();
+        $builder->matchAll(['boost' => 1.2]);
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"fuzzy_like_this":{"fuzziness":1.5,"like_text":"text like this one","fields":["bar","baz"]}}}}}}', $json);
-	}
+        $json = $builder->toJson();
 
-	public function testSingleFuzzyLikeThisField()
-	{
-		$builder = $this->getBuilder();
+        $this->assertEquals('{"index":"*","body":{"query":{"match_all":{"boost":1.2}}}}', $json);
+    }
 
-		$builder->fuzzyLikeThisField('baz', 'text like this one', ['fuzziness' => 1.5]);
+    public function testMoreLikeThis()
+    {
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->moreLikeThis(['title', 'description'], 'Once upon a time', ['min_term_freq' => 1, 'max_query_terms' => 12]);
 
-		$this->assertEquals('{"index":"*","body":{"query":{"fuzzy_like_this_field":{"baz":{"fuzziness":1.5,"like_text":"text like this one"}}}}}', $json);
-	}
+        $this->assertEquals('{"index":"*","body":{"query":{"more_like_this":{"fields":["title","description"],"like":"Once upon a time","min_term_freq":1,"max_query_terms":12}}}}', $builder->toJson());
 
-	public function testNestedFuzzyLikeThisField()
-	{
-		$builder = $this->getBuilder();
+        $builder = $builder->newInstance();
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->fuzzyLikeThisField('baz', 'text like this one', ['fuzziness' => 1.5]);
-			});
-		});
+        $builder->moreLikeThis(['name.first', 'name.last'], function($query) {
+            $query->like('imdb', 'movies', '1');
+            $query->like('imdb', 'movies', '2');
+            $query->like('and potentially some more text here as well');
+            $query->minTermFreq(1);
+            $query->maxQueryTerms(12);
+        });
 
-		$json = $builder->toJson();
+        $this->assertEquals('{"index":"*","body":{"query":{"more_like_this":{"fields":["name.first","name.last"],"like":[{"_index":"imdb","_type":"movies","_id":"1"},{"_index":"imdb","_type":"movies","_id":"2"},"and potentially some more text here as well"],"min_term_freq":1,"max_query_terms":12}}}}', $builder->toJson());
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"fuzzy_like_this_field":{"baz":{"fuzziness":1.5,"like_text":"text like this one"}}}}}}}', $json);
-	}
+        $builder = $builder->newInstance();
 
-	public function testSingleFuzzy()
-	{
-		$builder = $this->getBuilder();
+        $builder->moreLikeThis(['name.first', 'name.last'], function($query) {
+            $query->like('marvel', 'quotes', [
+                'name' => [
+                    'first' => 'Ben',
+                    'last' => 'Grim'
+                ],
+                'tweet' => 'You got no idea what I\'d... what I\'d give to be invisible.'
+            ]);
 
-		$builder->fuzzy('price', 12, ['fuzziness' => 2]);
+            $query->like('marvel', 'quotes', '2');
 
-		$json = $builder->toJson();
+            $query->minTermFreq(1);
+            $query->maxQueryTerms(12);
+        });
 
-		$this->assertEquals('{"index":"*","body":{"query":{"fuzzy":{"price":{"fuzziness":2,"value":12}}}}}', $json);
-	}
+        $this->assertEquals('{"index":"*","body":{"query":{"more_like_this":{"fields":["name.first","name.last"],"like":[{"_index":"marvel","_type":"quotes","doc":{"name":{"first":"Ben","last":"Grim"},"tweet":"You got no idea what I\'d... what I\'d give to be invisible."}},{"_index":"marvel","_type":"quotes","_id":"2"}],"min_term_freq":1,"max_query_terms":12}}}}', $builder->toJson());
+    }
 
-	public function testNestedFuzzy()
-	{
-		$builder = $this->getBuilder();
+    public function testNested()
+    {
+        $builder = $this->getBuilder();
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->fuzzy('price', 12, ['fuzziness' => 2]);
-			});
-		});
+        $builder->nested('obj1', 'avg', function ($query) {
+            $query->bool(function($query) {
+                $query->must('match', 'obj1.name', 'blue');
+            });
+        });
 
-		$json = $builder->toJson();
+        $this->assertEquals('{"index":"*","body":{"query":{"nested":{"path":"obj1","score_mode":"avg","bool":{"must":{"match":{"obj1.name":"blue"}}}}}}}', $builder->toJson());
+    }
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"fuzzy":{"price":{"fuzziness":2,"value":12}}}}}}}', $json);
-	}
+    public function testPrefix()
+    {
+        $builder = $this->getBuilder();
 
-	public function testHasChild()
-	{
-		$builder = $this->getBuilder();
+        $builder->prefix('user', 'ki', ['boost' => 2]);
 
-		$builder->hasChild(function($hasChild)
-		{
-			$hasChild->type('blog_tag');
-			$hasChild->scoreMode('sum');
+        $this->assertEquals('{"index":"*","body":{"query":{"prefix":{"user":{"prefix":"ki","boost":2}}}}}', $builder->toJson());
+    }
 
-			$hasChild->minChildren(2);
-			$hasChild->maxChildren(10);
+    public function testQueryString()
+    {
+        $builder = $this->getBuilder();
 
-			$hasChild->query(function($query)
-			{
-				$query->term('bar', 'baz');
-			});
-		});
+        $builder->queryString(['last_name'], 'this AND that OR thus');
 
-		$json = $builder->toJson();
+        $this->assertEquals('{"index":"*","body":{"query":{"query_string":{"fields":["last_name"],"query":"this AND that OR thus"}}}}', $builder->toJson());
+    }
 
-		$this->assertEquals('{"index":"*","body":{"query":{"has_child":{"query":{"term":{"bar":{"value":"baz"}}},"type":"blog_tag","score_mode":"sum","min_children":2,"max_children":10}}}}', $json);
-	}
+    public function testRange()
+    {
+        $builder = $this->getBuilder();
 
-	public function testNestHasChild()
-	{
-		$builder = $this->getBuilder();
+        $builder->range('created', ['gte' => 'now - 1d / d']);
 
-		$builder->bool(function($query)
-		{
-			$query->must(function($must)
-			{
-				$must->hasChild(function($hasChild)
-				{
-					$hasChild->type('blog_tag');
-					$hasChild->scoreMode('sum');
+        $this->assertEquals('{"index":"*","body":{"query":{"range":{"created":{"gte":"now - 1d \/ d"}}}}}', $builder->toJson());
+    }
 
-					$hasChild->minChildren(2);
-					$hasChild->maxChildren(10);
+    public function testSingleTerm()
+    {
+        $builder = $this->getBuilder();
 
-					$hasChild->query(function($query)
-					{
-						$query->term('bar', 'baz');
-					});
-				});
-			});
-		});
+        $builder->term('foo', 'bar', ['boost' => 2]);
 
-		$json = $builder->toJson();
+        $this->assertEquals('{"index":"*","body":{"query":{"term":{"foo":{"query":"bar","boost":2}}}}}', $builder->toJson());
+    }
 
-		$this->assertEquals('{"index":"*","body":{"query":{"bool":{"must":{"has_child":{"query":{"term":{"bar":{"value":"baz"}}},"type":"blog_tag","score_mode":"sum","min_children":2,"max_children":10}}}}}}', $json);
-	}
+    public function testTerms()
+    {
+        $builder = $this->getBuilder();
 
-	public function testHasParent()
-	{
-		$builder = $this->getBuilder();
+        $builder->terms('tags', ['blue', 'pill']);
 
-		$builder->hasParent(function($hasParent)
-		{
-			$hasParent->type('blog');
-			$hasParent->scoreMode('score');
+        $this->assertEquals('{"index":"*","body":{"query":{"terms":{"tags":["blue","pill"]}}}}', $builder->toJson());
+    }
 
-			$hasParent->query(function($query)
-			{
-				$query->term('bar', 'baz');
-			});
-		});
+    public function testRaw()
+    {
+        $builder = $this->getBuilder();
 
-		$json = $builder->toJson();
+        $builder->raw('{"query":{"match":{"foo":"bar"}}}');
 
-		$this->assertEquals('{"index":"*","body":{"query":{"has_parent":{"query":{"term":{"bar":{"value":"baz"}}},"type":"blog","score_mode":"score"}}}}', $json);
-	}
+        $this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":"bar"}}}}', $builder->toJson());
+    }
 
-	public function testIds()
-	{
-		$builder = $this->getBuilder();
+    public function getGrammar()
+    {
+        return new Grammar;
+    }
 
-		$builder->ids([2, 100], 'my_type');
+    public function getConnection()
+    {
+        $connection = Mockery::mock('Tamayo\Stretchy\Connection');
 
-		$json = $builder->toJson();
+        $connection->shouldReceive('getIndexPrefix')->andReturn('');
 
-		$this->assertEquals('{"index":"*","body":{"query":{"ids":{"values":[2,100],"type":"my_type"}}}}', $json);
-	}
+        return $connection;
+    }
 
-	public function testIndices()
-	{
-		$builder = $this->getBuilder();
+    public function getProcessor()
+    {
+        return new Processor;
+    }
 
-		$builder->indices(['index1', 'index2'], function($indices)
-		{
-			$indices->query(function($query)
-			{
-				$query->term('tag', 'wow');
-			});
-
-			$indices->noMatchQuery(function($noMatchQuery)
-			{
-				$noMatchQuery->term('tag', 'kow');
-			});
-		});
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"indices":{"no_match_query":{"term":{"tag":{"value":"kow"}}},"query":{"term":{"tag":{"value":"wow"}}}}}}}', $json);
-	}
-
-	public function testMatchAll()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->matchAll();
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"match_all":{}}}}', $json);
-
-		$builder = $builder->newInstance();
-
-		$builder->matchAll(['boost' => 1.2]);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"match_all":{"boost":1.2}}}}', $json);
-	}
-
-	public function testMoreLikeThis()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->moreLikeThis(['name.first', 'name.last'], 'text like this one', ['min_term_freq' => 1, 'max_query_terms' => 12]);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"more_like_this":{"min_term_freq":1,"max_query_terms":12,"fields":["name.first","name.last"],"like_text":"text like this one"}}}}', $json);
-
-		$builder = $builder->newInstance();
-
-		$builder->moreLikeThis(['name.first', 'name.last'], 'text like this one', function($moreLikeThis)
-		{
-			$moreLikeThis->minTermFreq(1);
-			$moreLikeThis->maxQueryTerms(12);
-
-			$moreLikeThis->docs([
-				['_index' => 'test', '_type' => 'type', '_id' => 1],
-				['_index' => 'test', '_type' => 'type', '_id' => 2]
-			]);
-
-			$moreLikeThis->ids(['3', '4']);
-		});
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"more_like_this":{"min_term_freq":1,"max_query_terms":12,"docs":[{"_index":"test","_type":"type","_id":1},{"_index":"test","_type":"type","_id":2}],"ids":["3","4"],"fields":["name.first","name.last"],"like_text":"text like this one"}}}}', $json);
-	}
-
-	public function testNested()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->nested(function($nested)
-		{
-			$nested->path('obj1');
-			$nested->scoreMode('avg');
-
-			$nested->query(function($query)
-			{
-				$query->bool(function($bool)
-				{
-					$bool->must(function($must)
-					{
-						$must->match('obj1.name', 'blue');
-						$must->range('obj1.count', ['gt' => 5]);
-					});
-				});
-			});
-		});
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"nested":{"query":{"bool":{"must":[{"match":{"obj1.name":{"query":"blue","type":"boolean"}}},{"range":{"obj1.count":{"gt":5}}}]}},"path":"obj1","score_mode":"avg"}}}}', $json);
-	}
-
-	public function testPrefix()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->prefix('user', 'ki', ['boost' => 2]);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"prefix":{"user":{"boost":2,"value":"ki"}}}}}', $json);
-	}
-
-	public function testQueryString()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->queryString('this AND that OR thus', ['default_field' => 'content']);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"query_string":{"default_field":"content","query":"this AND that OR thus"}}}}', $json);
-	}
-
-	public function testSimpleQueryString()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->simpleQueryString('"fried eggs" +(eggplant | potato) -frittata', ['analyzer' => 'snowball']);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"simple_query_string":{"analyzer":"snowball","query":"\"fried eggs\" +(eggplant | potato) -frittata"}}}}', $json);
-	}
-
-	public function testRegex()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->regex('name.first', 's.*y', ['boost' => 1.2]);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"regex":{"name.first":{"boost":1.2,"value":"s.*y"}}}}}', $json);
-	}
-
-	public function testTerms()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->terms('tags', ['blue', 'pill'], ['minimum_should_match' => 1]);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"terms":{"minimum_should_match":1,"tags":["blue","pill"]}}}}', $json);
-	}
-
-	public function testWildcardArray()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->raw(['query' => ['match' => ['testField' => 'abc']]]);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"match":{"testField":"abc"}}}}', $json);
-	}
-
-	public function testWildcardJson()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->raw('{"query":{"match":{"testField":"abc"}}}');
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"match":{"testField":"abc"}}}}', $json);
-	}
-
-	public function testRaw()
-	{
-		$builder = $this->getBuilder();
-
-		$builder->wildcard('user', 'ki*y', ['boost' => 2.0]);
-
-		$json = $builder->toJson();
-
-		$this->assertEquals('{"index":"*","body":{"query":{"wildcard":{"user":{"boost":2,"value":"ki*y"}}}}}', $json);
-	}
-
-	public function getGrammar()
-	{
-		return new Grammar;
-	}
-
-	public function getConnection()
-	{
-		$connection = Mockery::mock('Tamayo\Stretchy\Connection');
-
-		$connection->shouldReceive('getIndexPrefix')->andReturn('');
-
-		return $connection;
-	}
-
-	public function getProcessor()
-	{
-		return new Processor;
-	}
-
-	public function getClauseFactory()
-	{
-		return new Factory;
-	}
-
-	public function getBuilder()
-	{
-		return new Builder($this->getConnection(), $this->getGrammar(), $this->getProcessor(), $this->getClauseFactory());
-	}
+    public function getBuilder()
+    {
+        return new Builder($this->getConnection(), $this->getGrammar(), $this->getProcessor());
+    }
 }

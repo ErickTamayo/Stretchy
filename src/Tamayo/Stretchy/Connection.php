@@ -104,7 +104,7 @@ class Connection
 	}
 
 	/**
-	 * Perform an insertion into the engine.
+	 * Perform an insertion into elastic.
 	 *
 	 * @param  array $payload
 	 * @return array
@@ -115,7 +115,7 @@ class Connection
 	}
 
 	/**
-	 * Perform an insertion into the engine.
+	 * Get a document from elastic.
 	 *
 	 * @param  array $payload
 	 * @return array

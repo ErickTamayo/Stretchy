@@ -1,7 +1,6 @@
 <?php namespace Tamayo\Stretchy\Index;
 
 use Closure;
-use Illuminate\Support\Fluent;
 use Tamayo\Stretchy\Connection;
 use Tamayo\Stretchy\Index\Grammar;
 

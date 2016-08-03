@@ -71,7 +71,6 @@ class Builder extends BaseBuilder {
 	 */
 	public function getSettings($index = null)
 	{
-
 		if ($index == null) {
 			$index = $this->index;
 		}

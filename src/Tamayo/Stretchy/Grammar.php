@@ -32,6 +32,26 @@ class Grammar {
 	}
 
 	/**
+	 * Compile the the indices.
+	 *
+	 * @param  Builder $builder
+	 * @return array
+	 */
+	public function compileBuilderIndices(Builder $builder)
+	{
+		// If is a subquery, don't compile indices
+		if ($builder->isNested()) {
+			return [];
+		}
+
+		if (! count($builder->indices)) {
+			return ['index' => '*'];
+		}
+
+		return ['index' => implode(',', $builder->indices)];
+	}
+
+	/**
 	 * Compile the the index.
 	 *
 	 * @param  Builder $builder
@@ -99,28 +119,16 @@ class Grammar {
 	}
 
 	/**
-	 * Compiles the value into an array with the key if the value exists.
+	 * Compiles the value into an array with the key if the statement exists.
 	 *
-	 * @param  mixed $value
-	 * @param  string $key
-	 * @param  array $compile
+	 * @param  string $type
+	 * @param  array $statement
+	 * @param  mixed $class
 	 * @return array
 	 */
-	public function compile($key, $value, &$compile = null)
+	public function compile($type, $statement, $class = null)
 	{
-		$compiled = array();
-
-		if ($key != null && $value != null) {
-			$compiled[$key] = $value;
-		} else {
-			$compiled = $value;
-		}
-
-		if (isset($compile)) {
-			$compile[] = $compiled;
-		}
-
-		return $compiled ? : [];
+		return isset($statement) ? [$type => $statement] : [];
 	}
 
 	public function compileHeader(Builder $builder)

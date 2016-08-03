@@ -10,24 +10,10 @@ For **match** reference in elasticsearch [click here](http://www.elasticsearch.o
 Stretchy::search('foo')->match('bar', 'Stretchy')->get();
 ```
 
-To provide additional parameters:
+To provide additional parameters simply pass as an array as third argument:
 
 ```php
-Stretchy::search('foo')
-	->match('bar', 'Stretchy', function($match)
-	{
-		$match->operator('and');
-		$match->zeroTermsQuery('all');
-		$match->cutoffFrequency(0.001);
-	})
-	->get();
-```
-
-or
-
-```php
-Stretchy::search('foo')
-	->match('bar', 'baz', ['operator' => 'and', 'zero_terms_query' => 'all'])
+Stretchy::search('foo')->match('bar', 'baz', ['operator' => 'and', 'zero_terms_query' => 'all'])
 	->get();
 ```
 
@@ -54,18 +40,6 @@ To provide additional parameters:
 
 ```php
 Stretchy::search('foo')
-	->multiMatch(['bar', 'baz'], 'bah', function($match)
-	{
-		$match->tieBreaker(0.3);
-		$match->type('most_fields');
-	})
-	->get();
-```
-
-or
-
-```php
-Stretchy::search('foo')
 	->multiMatch(['bar', 'baz'], 'bah', ['tie_breaker' => 0.3, 'type' => 'most_fields'])
 	->get();
 ```
@@ -75,26 +49,49 @@ Stretchy::search('foo')
 
 For **bool** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-bool-query.html)
 
+For easy querying you can query specify
+
 ```php
 Stretchy::search('foo')
 	->bool(function($query)
 	{
 		$query->must(function($must)
 		{
-			$must->match('bar', 'baz');
+			$must->match('foo', 'bar');
+		});
+
+		$query->filter(function($filter) {
+			$filter->term('foo', 'abc');
 		});
 
 		$query->mustNot(function($mustNot)
 		{
-			$mustNot->match('bar', 'qux');
+			$mustNot->match('foo', 'baz');
 		});
 
 		$query->should(function($should)
 		{
-			$should->match('bar', 'bah');
+			$should->match('foo', 'bah');
+			$should->match('foo', 'qux');
 		});
 
 		$query->minimumShouldMatch(1);
+		$query->boost(3);
+	})
+	->get();
+```
+or
+
+```php
+Stretchy::search('foo')
+	->bool(function($query)
+	{
+		$query->must('match', 'foo', 'bar')
+		    ->filter('term', 'foo', 'qux')
+			->mustNot('match', 'foo', 'baz')
+			->should('match', 'foo', 'bah', ['zero_terms_query' => 'all'])
+			->minimumShouldMatch(2)
+			->boost(4);
 	})
 	->get();
 ```
@@ -128,16 +125,7 @@ For **common terms** reference in elasticsearch [click here](http://www.elastics
 
 ```php
 Stretchy::search('foo')
-		->common('bar', 'The brown fox', function($query)
-		{
-			$query->cutoffFrequency(0.001);
-
-			$query->minimumShouldMatch(function($minimumShouldMatch)
-			{
-				$minimumShouldMatch->lowFreq(2);
-				$minimumShouldMatch->highFreq(3);
-			});
-		})
+		->common('bar', 'The brown fox', ['cutoff_frequency' => 0.001, 'minimum_should_match' => ['low_freq' => 2, 'high_freq' => 3]])
 		->get();
 ```
 
@@ -177,66 +165,6 @@ Stretchy::search('foo')
 	->get();
 ```
 
-# Filtered query
-
-For **filtered** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-filtered-query.html)
-
-```php
-Stretchy::search('foo')
-	->filtered(function($filtered)
-	{
-		$filtered->query(function($query)
-		{
-			$query->match('bar', 'baz');
-		});
-
-		$filtered->filter(function($filter)
-		{
-			$filter->range('created', ['gte' => 'now - 1d / d']);
-		});
-
-	})
-	->get();
-```
-
-# Fuzzy like this query
-
-For **fuzzy like this** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-flt-query.html)
-
-```php
-Stretchy::search('foo')->fuzzyLikeThis(['bar', 'baz'], 'text like this one', ['fuzziness' => 1.5])->get();
-```
-
-or
-
-```php
-Stretchy::search('foo')
-	->fuzzyLikeThis(['bar', 'baz'], 'text like this one', function($fuzzyLikeThis)
-	{
-		$fuzzyLikeThis->fuzziness(1.5);
-	})
-	->get();
-```
-
-# Fuzzy like this field query
-
-For **fuzzy like this field** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-flt-field-query.html)
-
-```php
-Stretchy::search('foo')->fuzzyLikeThisField('baz', 'text like this one', ['fuzziness' => 1.5])->get();
-```
-
-or
-
-```php
-Stretchy::search('foo')
-	->fuzzyLikeThisField('baz', 'text like this one', function($fuzzyLikeThisField)
-	{
-		$fuzzyLikeThisField->fuzziness(1.5);
-	})
-	->get();
-```
-
 also, as the same as elasticsearch, you can use the alias **fltField**:
 
 ```php
@@ -267,33 +195,13 @@ Stretchy::search('foo')
 For **geoshape** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-geo-shape-query.html)
 
 ```php
-Stretchy::search('foo')->geoShape('location', [[13, 53],[14, 52]])->get();
+Stretchy::search('foo')->geoShape('location', 13, 53, 14, 52)->get();
 ```
 
 ###Indexed shape
 
 ```php
-Stretchy::search('foo')
-	->geoShape('location', [[13, 53],[14, 52]], 'indexed_shape', [
-		'id' 	=> 'DEU',
-		'type'	=> 'countries',
-		'index'	=> 'shapes',
-		'path'	=> 'location'
-	])
-	->get();
-```
-or
-
-```php
-Stretchy::search('foo')
-	->geoShape('location', [[13, 53],[14, 52]], 'indexed_shape', function($shape)
-	{
-		$shape->id('DEU');
-		$shape->type('counstries');
-		$shape->index('shapes');
-		$shape->path('location');
-	})
-	->get();
+Stretchy::search('foo')->preindexedGeoShape('location', 'DEU', 'countries', 'shapes', 'location')->get();
 ```
 
 # Has child query
@@ -301,19 +209,16 @@ Stretchy::search('foo')
 For **has child** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-has-child-query.html)
 
 ```php
-Stretchy::search('foo')
-	->hasChild(function($hasChild)
-	{
-		$hasChild->type('blog_tag');
-		$hasChild->scoreMode('sum');
-
-		$hasChild->minChildren(2);
-		$hasChild->maxChildren(10);
-
-		$hasChild->query(function($query)
-		{
-			$query->term('bar', 'baz');
-		});
+Stretchy::search('foo')->hasChild('blog_tag', 'term', 'tag', 'something', ['boost' => 2.0])->get();
+```
+or
+```php
+Stretchy::search('foo')->
+	->hasChild('blog_tag', function ($query) {
+		$query->scoreMode('sum');
+		$query->minChildren(2);
+		$query->maxChildren(10);
+		$query->query('term', 'tag', 'something');
 	})
 	->get();
 ```
@@ -323,16 +228,14 @@ Stretchy::search('foo')
 For **has parent** reference in elasticsearch [click here](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-has-parent-query.html)
 
 ```php
-Stretchy::search('foo')
-	->hasParent(function($hasParent)
-	{
-		$hasParent->type('blog');
-		$hasParent->scoreMode('score');
-
-		$hasParent->query(function($query)
-		{
-			$query->term('bar', 'baz');
-		});
+Stretchy::search('foo')->hasParent('blog', 'term', 'tag', 'something')->get();
+```
+or
+```php
+Stretchy::search('foo')->
+	->hasParent('blog_tag', function ($query) {
+		$query->scoreMode('score');
+		$query->query('term', 'tag', 'something');
 	})
 	->get();
 ```
@@ -386,7 +289,7 @@ For **match all** reference in elasticsearch [click here](http://www.elasticsear
 
 ```php
 Stretchy::search('foo')
-	->moreLikeThis(['name.first', 'name.last'], 'text like this one', ['min_term_freq' => 1, 'max_query_terms' => 12])
+	->moreLikeThis(['title', 'description'], 'Once upon a time', ['min_term_freq' => 1, 'max_query_terms' => 12])
 	->get();
 ```
 
@@ -394,17 +297,31 @@ or
 
 ```php
 Stretchy::search('foo')
-	->moreLikeThis(['name.first', 'name.last'], 'text like this one', function($moreLikeThis)
-	{
-		$moreLikeThis->minTermFreq(1);
-		$moreLikeThis->maxQueryTerms(12);
+	->moreLikeThis(['name.first', 'name.last'], function($query) {
+		$query->like('imdb', 'movies', '1');
+		$query->like('imdb', 'movies', '2');
+		$query->like('and potentially some more text here as well');
+		$query->minTermFreq(1);
+		$query->maxQueryTerms(12);
+	})
+	->get();
+```
 
-		$moreLikeThis->docs([
-			['_index' => 'test', '_type' => 'type', '_id' => 1],
-			['_index' => 'test', '_type' => 'type', '_id' => 2]
+or
+
+```php
+Stretchy::search('foo')
+	->moreLikeThis(['name.first', 'name.last'], function($query) {
+		$query->like('marvel', 'quotes', [
+			'name' => [
+				'first' => 'Ben',
+				'last' => 'Grim'
+			],
+			'tweet' => 'You got no idea what I\'d... what I\'d give to be invisible.'
 		]);
-
-		$moreLikeThis->ids(['3', '4']);
+		$query->like('marvel', 'quotes', '2');
+		$query->minTermFreq(1);
+		$query->maxQueryTerms(12);
 	})
 	->get();
 ```

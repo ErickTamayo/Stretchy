@@ -184,9 +184,11 @@ class Grammar extends BaseGrammar {
      */
     public function sanitizeStatement($statement)
     {
-        $statement = array_filter($statement, function ($key) {
+        $matchedKeys = array_filter(array_keys($statement), function($key) {
             return in_array($key, ['field', 'value', 'query_field_name', 'parameters', 'subquery']);
-        }, ARRAY_FILTER_USE_KEY);
+        });
+
+        $statement = array_intersect_key($statement, array_flip($matchedKeys));
 
         foreach ($statement as $key => $value) {
             unset($statement[$key]);

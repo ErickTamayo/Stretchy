@@ -710,25 +710,6 @@ class Builder extends BaseBuilder {
         return $this->addQuery('query_string', ['field' => null, 'value' => null, 'parameters' => $parameters]);
     }
 
-
-
-    /**
-     * query_string Query.
-     *
-     * @param  mixed $defaultFieldOrFields
-     * @param  string $query
-     * @param  array $parameters
-     * @return \Tamayo\Stretchy\Search\Builder
-     */
-    public function queryString($defaultFieldOrFields, $query, array $parameters = [])
-    {
-        $queryFieldName = is_array($defaultFieldOrFields) ? 'fields' : 'default_field';
-
-        $parameters = array_merge($parameters, [$queryFieldName => $defaultFieldOrFields, 'query' => $query ]);
-
-        return $this->addQuery('query_string', ['field' => null, 'value' => null, 'parameters' => $parameters]);
-    }
-
     /**
      * Add a query statement to the Builder.
      *

@@ -1,4 +1,6 @@
-<?php namespace Tamayo\Stretchy\Search;
+<?php
+
+namespace Tamayo\Stretchy\Search;
 
 use Tamayo\Stretchy\Search\Builder;
 

@@ -1,4 +1,6 @@
-<?php namespace Tamayo\Stretchy\Index;
+<?php
+
+namespace Tamayo\Stretchy\Index;
 
 use Tamayo\Stretchy\Index\Builder;
 

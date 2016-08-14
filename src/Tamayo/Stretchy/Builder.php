@@ -1,4 +1,6 @@
-<?php namespace Tamayo\Stretchy;
+<?php
+
+namespace Tamayo\Stretchy;
 
 use Tamayo\Stretchy\Grammar;
 use Tamayo\Stretchy\Connection;

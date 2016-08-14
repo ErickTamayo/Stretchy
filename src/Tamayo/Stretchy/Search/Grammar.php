@@ -1,7 +1,9 @@
-<?php namespace Tamayo\Stretchy\Search;
+<?php
+
+namespace Tamayo\Stretchy\Search;
 
 use Closure;
-use Illuminate\Support\Str;
+use Tamayo\Stretchy\Support\Str;
 use Tamayo\Stretchy\Search\Builder;
 use Tamayo\Stretchy\Search\Clauses\Clause;
 use Tamayo\Stretchy\Grammar as BaseGrammar;

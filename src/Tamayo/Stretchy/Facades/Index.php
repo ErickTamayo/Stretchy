@@ -1,4 +1,6 @@
-<?php namespace Tamayo\Stretchy\Facades;
+<?php
+
+namespace Tamayo\Stretchy\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

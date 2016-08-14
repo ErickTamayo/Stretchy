@@ -1,4 +1,6 @@
-<?php namespace Tamayo\Stretchy\Document;
+<?php
+
+namespace Tamayo\Stretchy\Document;
 
 use Closure;
 use Tamayo\Stretchy\Connection;

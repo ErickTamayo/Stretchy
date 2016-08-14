@@ -1,4 +1,6 @@
-<?php namespace Tamayo\Stretchy\Exceptions;
+<?php
+
+namespace Tamayo\Stretchy\Exceptions;
 
 use Exception;
 

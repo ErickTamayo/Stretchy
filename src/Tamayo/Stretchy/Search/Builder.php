@@ -1,8 +1,10 @@
-<?php namespace Tamayo\Stretchy\Search;
+<?php
+
+namespace Tamayo\Stretchy\Search;
 
 use Closure;
-use Illuminate\Support\Str;
 use Tamayo\Stretchy\Connection;
+use Tamayo\Stretchy\Support\Str;
 use Tamayo\Stretchy\Search\Grammar;
 use Tamayo\Stretchy\Search\Processor;
 use Tamayo\Stretchy\Search\Parameter;

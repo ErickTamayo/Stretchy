@@ -1,4 +1,6 @@
-<?php namespace Tamayo\Stretchy\Document;
+<?php
+
+namespace Tamayo\Stretchy\Document;
 
 use Tamayo\Stretchy\Document\Builder;
 

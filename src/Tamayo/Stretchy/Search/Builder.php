@@ -70,6 +70,20 @@ class Builder extends BaseBuilder {
     public $filters = [];
 
     /**
+     * The maximum number of records to return.
+     *
+     * @var int
+     */
+    public $size;
+
+    /**
+     * The number of records to skip.
+     *
+     * @var int
+     */
+    public $from;
+
+    /**
      * Create a new search builder.
      *
      * @param \Tamayo\Stretchy\Connection $connection
@@ -780,6 +794,32 @@ class Builder extends BaseBuilder {
     public function first()
     {
         return $this->size(1)->get();
+    }
+
+    /**
+     * Set the maximum number of records to return.
+     *
+     * @param  integer $size
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function size($size)
+    {
+        $this->size = $size;
+
+        return $this;
+    }
+
+    /**
+     * Set the number of records to skip.
+     *
+     * @param  integer $from
+     * @return \Tamayo\Stretchy\Search\Builder
+     */
+    public function from($from)
+    {
+        $this->from = $from;
+
+        return $this;
     }
 
     /**

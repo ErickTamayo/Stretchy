@@ -408,6 +408,24 @@ class SearchGrammarTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('{"index":"*","body":{"query":{"match":{"foo":"bar"}}}}', $builder->toJson());
     }
 
+    public function testSize()
+    {
+        $builder = $this->getBuilder();
+
+        $builder->size(13);
+
+        $this->assertEquals('{"index":"*","body":{"size":13}}', $builder->toJson());
+    }
+
+    public function testFrom()
+    {
+        $builder = $this->getBuilder();
+
+        $builder->from(11);
+
+        $this->assertEquals('{"index":"*","body":{"from":11}}', $builder->toJson());
+    }
+
     public function getGrammar()
     {
         return new Grammar;

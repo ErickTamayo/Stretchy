@@ -43,11 +43,35 @@ class Grammar extends BaseGrammar {
     public function compileBody(Builder $builder)
     {
         $body = array_merge_recursive(
+            $this->compileBuilderSize($builder),
+            $this->compileBuilderFrom($builder),
             $this->compileBuilderQueries($builder),
             $this->compileBuilderRaw($builder)
         );
 
         return sizeof($body) == 0 ? [] : compact('body');
+    }
+
+    /**
+     * Compile size
+     *
+     * @param  Builder $builder
+     * @return array
+     */
+    public function compileBuilderSize(Builder $builder)
+    {
+        return isset($builder->size) ? ['size' => $builder->size] : [];
+    }
+
+    /**
+     * Compile from
+     *
+     * @param  Builder $builder
+     * @return array
+     */
+    public function compileBuilderFrom(Builder $builder)
+    {
+        return isset($builder->from) ? ['from' => $builder->from] : [];
     }
 
     /**
